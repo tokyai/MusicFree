@@ -19,6 +19,8 @@ interface ISimpleInputProps {
     maxLength?: number;
     placeholder?: string;
     autoFocus?: boolean;
+    initialValue?: string;
+    secureTextEntry?: boolean;
 }
 
 export default function SimpleInput(props: ISimpleInputProps) {
@@ -31,9 +33,11 @@ export default function SimpleInput(props: ISimpleInputProps) {
         hints,
         title,
         autoFocus = true,
+        initialValue = "",
+        secureTextEntry = false,
     } = props;
 
-    const [input, setInput] = useState("");
+    const [input, setInput] = useState(initialValue);
     const colors = useColors();
 
     return (
@@ -72,6 +76,7 @@ export default function SimpleInput(props: ISimpleInputProps) {
                         placeholderTextColor={colors.textSecondary}
                         placeholder={placeholder ?? ""}
                         maxLength={maxLength}
+                        secureTextEntry={secureTextEntry}
                     />
                     <ScrollView>
                         {hints?.length ? (

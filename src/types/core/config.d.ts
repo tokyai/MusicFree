@@ -43,6 +43,9 @@ export interface IAppConfigProperties {
     "lyric.fontSize": number;
     "lyric.detailFontSize": number;
     "lyric.autoSearchLyric": boolean;
+    "lyric.bilibiliAudioRecognitionEnabled": boolean;
+    "lyric.bilibiliAudioRecognitionProvider": "netease" | "audd";
+    "lyric.auddApiToken": string;
 
     // Theme
     "theme.background": string;

@@ -9,6 +9,7 @@ import { SortType } from "@/constants/commonConst.ts";
 import pathConst from "@/constants/pathConst";
 import Config, { useAppConfig } from "@/core/appConfig";
 import { useI18N } from "@/core/i18n";
+import lyricManager from "@/core/lyricManager";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
 import useColors from "@/hooks/useColors";
 import LyricUtil, { NativeTextAlignment } from "@/native/lyricUtil";
@@ -673,6 +674,9 @@ function LyricSetting() {
      *     "lyric.fontSize": number;
      *     "lyric.detailFontSize": number;
      *     "lyric.autoSearchLyric": boolean;
+     *     "lyric.bilibiliAudioRecognitionEnabled": boolean;
+     *     "lyric.bilibiliAudioRecognitionProvider": "netease" | "audd";
+     *     "lyric.auddApiToken": string;
      */
     const showStatusBarLyric = useAppConfig("lyric.showStatusBarLyric");
     const topPercent = useAppConfig("lyric.topPercent");
@@ -683,6 +687,13 @@ function LyricSetting() {
     const widthPercent = useAppConfig("lyric.widthPercent");
     const fontSize = useAppConfig("lyric.fontSize");
     const enableAutoSearchLyric = useAppConfig("lyric.autoSearchLyric");
+    const enableBilibiliRecognition = useAppConfig(
+        "lyric.bilibiliAudioRecognitionEnabled",
+    );
+    const bilibiliRecognitionProvider = useAppConfig(
+        "lyric.bilibiliAudioRecognitionProvider",
+    );
+    const auddApiToken = useAppConfig("lyric.auddApiToken");
 
 
 
@@ -694,6 +705,35 @@ function LyricSetting() {
         t("basicSettings.lyric.autoSearchLyric"),
         "lyric.autoSearchLyric",
         enableAutoSearchLyric ?? false,
+    );
+
+    const bilibiliRecognition = createSwitch(
+        t("basicSettings.lyric.bilibiliAudioRecognitionEnabled"),
+        "lyric.bilibiliAudioRecognitionEnabled",
+        enableBilibiliRecognition ?? false,
+        newValue => {
+            Config.setConfig(
+                "lyric.bilibiliAudioRecognitionEnabled",
+                newValue,
+            );
+            lyricManager.cancelBilibiliRecognition(!newValue);
+        },
+    );
+
+    const bilibiliProvider = createRadio(
+        t("basicSettings.lyric.bilibiliAudioRecognitionProvider"),
+        "lyric.bilibiliAudioRecognitionProvider",
+        ["netease", "audd"],
+        bilibiliRecognitionProvider ?? "netease",
+        {
+            netease: t(
+                "basicSettings.lyric.bilibiliAudioRecognitionProvider.netease",
+            ),
+            audd: t(
+                "basicSettings.lyric.bilibiliAudioRecognitionProvider.audd",
+            ),
+        },
+        () => lyricManager.cancelBilibiliRecognition(true),
     );
 
     const openStatusBarLyric = createSwitch(
@@ -764,6 +804,46 @@ function LyricSetting() {
                 <ListItem.Content title={autoSearchLyric.title} />
                 {autoSearchLyric.right}
             </ListItem>
+            <ListItem
+                withHorizontalPadding
+                heightType="small"
+                onPress={bilibiliRecognition.onPress}>
+                <ListItem.Content title={bilibiliRecognition.title} />
+                {bilibiliRecognition.right}
+            </ListItem>
+            <ListItem
+                withHorizontalPadding
+                heightType="small"
+                onPress={bilibiliProvider.onPress}>
+                <ListItem.Content title={bilibiliProvider.title} />
+                {bilibiliProvider.right}
+            </ListItem>
+            {(
+                bilibiliRecognitionProvider ?? "netease"
+            ) === "audd" ? (
+                    <ListItem
+                        withHorizontalPadding
+                        heightType="small"
+                        onPress={() => {
+                            showPanel("SimpleInput", {
+                                title: t("basicSettings.lyric.auddApiToken"),
+                                placeholder: t("basicSettings.lyric.auddApiTokenPlaceholder"),
+                                initialValue: auddApiToken || "",
+                                secureTextEntry: true,
+                                maxLength: 256,
+                                onOk(text, closePanel) {
+                                    Config.setConfig("lyric.auddApiToken", text.trim());
+                                    lyricManager.cancelBilibiliRecognition(true);
+                                    closePanel();
+                                },
+                            });
+                        }}>
+                        <ListItem.Content
+                            title={t("basicSettings.lyric.auddApiToken")}
+                            description={auddApiToken ? "********" : undefined}
+                        />
+                    </ListItem>
+                ) : null}
             <ListItem
                 withHorizontalPadding
                 heightType="small"

@@ -17,6 +17,7 @@ import { StatusBar } from "react-native";
 import { ReduceMotion, ReducedMotionConfig } from "react-native-reanimated";
 import { routes } from "@/core/router/routes.tsx";
 import ErrorBoundary from "@/components/errorBoundary";
+import NeteaseFingerprintSandbox from "@/components/neteaseFingerprintSandbox";
 
 /**
  * 字体颜色
@@ -37,6 +38,7 @@ export default function Pages() {
             <ReducedMotionConfig mode={ReduceMotion.Never} />
             <GestureHandlerRootView style={globalStyle.flex1}>
                 <SafeAreaProvider>
+                    <NeteaseFingerprintSandbox />
                     <NavigationContainer theme={theme}>
                         <PageBackground />
                         <Stack.Navigator

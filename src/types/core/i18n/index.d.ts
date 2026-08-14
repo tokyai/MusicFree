@@ -102,6 +102,7 @@ export interface ILanguageData {
     "lyric.unlinkLyric": string; // 取消链接歌词
     "lyric.noLyric": string; // 暂无歌词
     "lyric.searchLyric": string; // 搜索歌词
+    "lyric.recognizedSong": string; // 动态识别歌曲
 
     // 音乐列表编辑器相关
     "musicListEditor.selectMusicCount": string; // 选择的音乐数量
@@ -338,6 +339,12 @@ export interface ILanguageData {
     
     "basicSettings.lyric": string; // 歌词
     "basicSettings.lyric.autoSearchLyric": string; // 歌词缺失时自动搜索歌词
+    "basicSettings.lyric.bilibiliAudioRecognitionEnabled": string; // B站音频动态识别
+    "basicSettings.lyric.bilibiliAudioRecognitionProvider": string; // B站识别服务
+    "basicSettings.lyric.bilibiliAudioRecognitionProvider.netease": string; // 网易云
+    "basicSettings.lyric.bilibiliAudioRecognitionProvider.audd": string; // AudD
+    "basicSettings.lyric.auddApiToken": string; // AudD API Token
+    "basicSettings.lyric.auddApiTokenPlaceholder": string; // AudD token placeholder
     "basicSettings.lyric.showStatusBarLyric": string; // 开启桌面歌词
     "basicSettings.lyric.align": string; // 对齐方式
     "basicSettings.lyric.align.left": string; // 左对齐

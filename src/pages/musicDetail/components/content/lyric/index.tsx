@@ -41,7 +41,7 @@ const fontSizeMap = {
 export default function Lyric(props: IProps) {
     const { onTurnPageClick } = props;
 
-    const { loading, meta, lyrics, hasTranslation } =
+    const { loading, meta, lyrics, hasTranslation, recognizedSong } =
         useLyricState();
     const currentLrcItem = useCurrentLyricItem();
     const showTranslation = PersistStatus.useValue(
@@ -255,8 +255,21 @@ export default function Lyric(props: IProps) {
                                 <>
                                     {blankComponent}
                                     <View style={styles.lyricMeta}>
+                                        {recognizedSong ? (
+                                            <Text
+                                                style={[
+                                                    styles.lyricMetaText,
+                                                    fontSizeStyle,
+                                                ]}
+                                                numberOfLines={1}>
+                                                {t("lyric.recognizedSong", {
+                                                    title: recognizedSong.title,
+                                                    artist: recognizedSong.artist,
+                                                })}
+                                            </Text>
+                                        ) : null}
                                         {associateMusicItem ? (
-                                            <>
+                                            <View style={styles.lyricAssociation}>
                                                 <Text
                                                     style={[
                                                         styles.lyricMetaText,
@@ -281,7 +294,7 @@ export default function Lyric(props: IProps) {
                                                         {t("lyric.unlinkLyric")}
                                                     </Text>
                                                 </GestureDetector>
-                                            </>
+                                            </View>
                                         ) : null}
                                     </View>
                                 </>
@@ -386,7 +399,7 @@ const styles = StyleSheet.create({
     lyricMeta: {
         position: "absolute",
         width: "100%",
-        flexDirection: "row",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         left: 0,
@@ -397,6 +410,12 @@ const styles = StyleSheet.create({
         color: "white",
         opacity: 0.8,
         maxWidth: "80%",
+    },
+    lyricAssociation: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
     },
     linkText: {
         color: "#66ccff",

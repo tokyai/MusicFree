@@ -94,6 +94,15 @@ class AppConfig implements IAppConfig {
                 ["setting.lyric.fontSize", "lyric.fontSize"],
                 ["setting.lyric.detailFontSize", "lyric.detailFontSize"],
                 ["setting.lyric.autoSearchLyric", "lyric.autoSearchLyric"],
+                [
+                    "setting.lyric.bilibiliAudioRecognitionEnabled",
+                    "lyric.bilibiliAudioRecognitionEnabled",
+                ],
+                [
+                    "setting.lyric.bilibiliAudioRecognitionProvider",
+                    "lyric.bilibiliAudioRecognitionProvider",
+                ],
+                ["setting.lyric.auddApiToken", "lyric.auddApiToken"],
 
                 // Theme
                 ["setting.theme.background", "theme.background"],

@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+<script>
+(function () {
+    var global = window;
+    var originalRequire = global.require;
+    global.require = function (name) {
+        if (name === "crypto") return global.crypto || {};
+        if (name === "path") {
+            return {
+                join: function () {
+                    return Array.prototype.slice.call(arguments).join("/");
+                }
+            };
+        }
+        if (name === "fs") {
+            return {
+                readFile: function (url, callback) {
+                    var request = new XMLHttpRequest();
+                    request.open("GET", url, true);
+                    request.responseType = "arraybuffer";
+                    request.onload = function () {
+                        if ((request.status === 0 || request.status === 200) && request.response) {
+                            callback(null, request.response);
+                        } else {
+                            callback(new Error("Unable to load fingerprint WASM"));
+                        }
+                    };
+                    request.onerror = function () {
+                        callback(new Error("Unable to load fingerprint WASM"));
+                    };
+                    request.send(null);
+                }
+            };
+        }
+        return originalRequire ? originalRequire(name) : {};
+    };
+    global.module = { exports: {} };
+    global.exports = global.module.exports;
+    global.__dirname = global.location.href.replace(/\/[^/?#]+(?:[?#].*)?$/, "");
+}());
+</script>
+<script src="./sandbox.bundle.js"></script>
+<script>
+(function () {
+    var encoder = window.module && window.module.exports;
+    var activeRequestId = null;
+    var disposed = false;
+
+    function send(message) {
+        if (!disposed && window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify(message));
+        }
+    }
+
+    function decodeBase64(value) {
+        var binary = window.atob(value);
+        var bytes = new Uint8Array(binary.length);
+        for (var i = 0; i < binary.length; i += 1) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    function decodeAudio(context, buffer) {
+        return new Promise(function (resolve, reject) {
+            var decoded = context.decodeAudioData(buffer, resolve, reject);
+            if (decoded && typeof decoded.then === "function") {
+                decoded.then(resolve, reject);
+            }
+        });
+    }
+
+    function resampleTo48k(context, audio) {
+        if (audio.sampleRate === 48000) return Promise.resolve(audio);
+        var length = Math.ceil(audio.duration * 48000);
+        var OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!OfflineContext) return Promise.reject(new Error("48kHz resampling is unavailable"));
+        var offline = new OfflineContext(audio.numberOfChannels, length, 48000);
+        var source = offline.createBufferSource();
+        source.buffer = audio;
+        source.connect(offline.destination);
+        source.start(0);
+        return offline.startRendering();
+    }
+
+    async function process(request) {
+        if (!encoder || typeof encoder.Encode !== "function") {
+            throw new Error("Netease fingerprint encoder is unavailable");
+        }
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) throw new Error("Web Audio is unavailable");
+        var context;
+        try {
+            context = new AudioContext({ sampleRate: 48000 });
+        } catch (_) {
+            context = new AudioContext();
+        }
+        try {
+            var bytes = decodeBase64(request.audioBase64);
+            var decoded = await decodeAudio(context, bytes.buffer);
+            decoded = await resampleTo48k(context, decoded);
+            var from = decoded.duration >= 10 ? 4 : 0;
+            if (decoded.duration < from + 6) {
+                throw new Error("Recognition clip is too short");
+            }
+            var fingerprint = await encoder.Encode(decoded, from, 6, 0);
+            return {
+                fingerprint: fingerprint,
+                queryOffsetSeconds: from
+            };
+        } finally {
+            if (context.close) await context.close().catch(function () {});
+        }
+    }
+
+    async function onMessage(event) {
+        var request;
+        try {
+            request = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        } catch (_) {
+            return;
+        }
+        if (!request || request.type !== "fingerprint" || activeRequestId === request.id) return;
+        activeRequestId = request.id;
+        try {
+            var result = await process(request);
+            send({
+                type: "result",
+                id: request.id,
+                fingerprint: result.fingerprint,
+                queryOffsetSeconds: result.queryOffsetSeconds
+            });
+        } catch (error) {
+            send({
+                type: "error",
+                id: request.id,
+                error: error && error.message ? error.message : String(error)
+            });
+        } finally {
+            activeRequestId = null;
+        }
+    }
+
+    document.addEventListener("message", onMessage, false);
+    window.addEventListener("message", onMessage, false);
+    send({ type: "ready" });
+}());
+</script>
+</body>
+</html>

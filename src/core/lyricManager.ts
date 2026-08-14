@@ -4,7 +4,11 @@ import { IInjectable } from "@/types/infra";
 import LyricParser, { IParsedLrcItem } from "@/utils/lrcParser";
 import { getMediaExtraProperty, patchMediaExtra } from "@/utils/mediaExtra";
 import { isSameMediaItem } from "@/utils/mediaUtils";
-import minDistance from "@/utils/minDistance";
+import {
+    getRecognizedSongIdentity,
+    MAX_LYRIC_MATCH_SCORE,
+    scoreLyricCandidate,
+} from "@/utils/lyricMatch";
 import { atom, getDefaultStore, useAtomValue } from "jotai";
 import { Plugin } from "./pluginManager";
 
@@ -17,6 +21,19 @@ import { unlink, writeFile } from "react-native-fs";
 import RNTrackPlayer, { Event } from "react-native-track-player";
 import { TrackPlayerEvents } from "@/core.defination/trackPlayer";
 import { IPluginManager } from "@/types/core/pluginManager";
+import {
+    BilibiliRecognitionProvider,
+    cancelBilibiliAudioRecognition,
+    fetchNeteaseLyric,
+    getRecognitionSegmentStart,
+    isBilibiliMediaItem,
+    recognizeBilibiliAudio,
+} from "./bilibiliAudioRecognition";
+
+const BILIBILI_RECOGNITION_INITIAL_DELAY = 8;
+const BILIBILI_RECOGNITION_RETRY_INTERVAL = 30;
+const BILIBILI_RECOGNITION_AFTER_LAST_LYRIC = 15;
+const BILIBILI_SEEK_THRESHOLD = 4;
 
 
 interface ILyricState {
@@ -24,6 +41,10 @@ interface ILyricState {
     lyrics: IParsedLrcItem[];
     hasTranslation: boolean;
     meta?: Record<string, string>;
+    recognizedSong?: {
+        title: string;
+        artist: string;
+    };
 }
 
 const defaultLyricState = {
@@ -43,6 +64,17 @@ class LyricManager implements IInjectable {
     private pluginManager!: IPluginManager;
 
     private lyricParser: LyricParser | null = null;
+    private lyricRequestRevision = 0;
+
+    private recognitionRevision = 0;
+    private recognitionInFlight = false;
+    private recognitionConfigKey?: string;
+    private recognitionAbortController?: AbortController;
+    private nextRecognitionPosition: number | null = null;
+    private lastPlaybackPosition: number | null = null;
+    private recognizedSongIdentity: string | null = null;
+    private recognizedSegmentStart: number | null = null;
+    private recognizedSong?: ILyricState["recognizedSong"];
 
 
     get currentLyricItem() {
@@ -62,6 +94,7 @@ class LyricManager implements IInjectable {
     setup() {
         // 更新歌词
         this.trackPlayer.on(TrackPlayerEvents.CurrentMusicChanged, (musicItem) => {
+            this.resetBilibiliRecognition();
             this.refreshLyric(true, true);
 
             if (this.appConfig.getConfig("lyric.showStatusBarLyric")) {
@@ -75,6 +108,8 @@ class LyricManager implements IInjectable {
         });
 
         RNTrackPlayer.addEventListener(Event.PlaybackProgressUpdated, evt => {
+            this.maybeRecognizeBilibiliAudio(evt.position).catch(() => {});
+
             const parser = this.lyricParser;
             if (!parser || !this.trackPlayer.isCurrentMusic(parser.musicItem)) {
                 return;
@@ -246,8 +281,276 @@ class LyricManager implements IInjectable {
         }
     }
 
+    private getBilibiliRecognitionConfig() {
+        const configuredProvider = this.appConfig.getConfig(
+            "lyric.bilibiliAudioRecognitionProvider",
+        );
+        const provider: BilibiliRecognitionProvider =
+            configuredProvider === "audd" ? "audd" : "netease";
+        const token = this.appConfig.getConfig("lyric.auddApiToken")?.trim() || "";
+        return {
+            provider,
+            token,
+            key: provider === "audd" ? `${provider}:${token}` : provider,
+        };
+    }
+
+    public cancelBilibiliRecognition(restoreLyric = false) {
+        this.resetBilibiliRecognition();
+        if (restoreLyric) {
+            this.refreshLyric(false).catch(() => {});
+        }
+    }
+
+    private resetBilibiliRecognition(configKey?: string) {
+        this.recognitionRevision += 1;
+        this.recognitionAbortController?.abort();
+        this.recognitionAbortController = undefined;
+        cancelBilibiliAudioRecognition();
+        this.recognitionConfigKey = configKey;
+        this.nextRecognitionPosition = null;
+        this.lastPlaybackPosition = null;
+        this.recognizedSongIdentity = null;
+        this.recognizedSegmentStart = null;
+        this.recognizedSong = undefined;
+    }
+
+    private async maybeRecognizeBilibiliAudio(position: number) {
+        const enabled = this.appConfig.getConfig(
+            "lyric.bilibiliAudioRecognitionEnabled",
+        ) === true;
+        const currentMusicItem = this.trackPlayer.currentMusic;
+        if (
+            !enabled ||
+            !currentMusicItem ||
+            !isBilibiliMediaItem(currentMusicItem)
+        ) {
+            if (this.recognitionConfigKey !== undefined) {
+                this.resetBilibiliRecognition();
+                this.refreshLyric(false).catch(() => {});
+            }
+            return;
+        }
+
+        const config = this.getBilibiliRecognitionConfig();
+        if (config.provider === "audd" && !config.token) {
+            if (this.recognitionConfigKey !== undefined) {
+                this.resetBilibiliRecognition();
+                this.refreshLyric(false).catch(() => {});
+            }
+            return;
+        }
+
+        if (config.key !== this.recognitionConfigKey) {
+            this.resetBilibiliRecognition(config.key);
+        }
+
+        if (
+            this.lastPlaybackPosition !== null &&
+            Math.abs(position - this.lastPlaybackPosition) >
+                BILIBILI_SEEK_THRESHOLD
+        ) {
+            this.resetBilibiliRecognition(config.key);
+        }
+        this.lastPlaybackPosition = position;
+
+        if (
+            position < BILIBILI_RECOGNITION_INITIAL_DELAY ||
+            this.recognitionInFlight ||
+            (this.nextRecognitionPosition !== null &&
+                position < this.nextRecognitionPosition)
+        ) {
+            return;
+        }
+
+        const revision = this.recognitionRevision;
+        const abortController = new AbortController();
+        this.recognitionAbortController = abortController;
+        this.recognitionInFlight = true;
+        this.nextRecognitionPosition =
+            position + BILIBILI_RECOGNITION_RETRY_INTERVAL;
+
+        try {
+            const playerTrack = (await RNTrackPlayer.getActiveTrack()) as
+                | IMusic.IMusicItem
+                | undefined;
+            if (
+                revision !== this.recognitionRevision ||
+                !playerTrack?.url ||
+                !this.trackPlayer.isCurrentMusic(currentMusicItem) ||
+                !isSameMediaItem(playerTrack, currentMusicItem)
+            ) {
+                return;
+            }
+
+            const result = await recognizeBilibiliAudio(
+                playerTrack,
+                position,
+                {
+                    provider: config.provider,
+                    apiToken: config.token,
+                    signal: abortController.signal,
+                },
+            ).catch(() => null);
+            if (
+                !result ||
+                revision !== this.recognitionRevision ||
+                abortController.signal.aborted ||
+                !this.trackPlayer.isCurrentMusic(currentMusicItem) ||
+                !this.appConfig.getConfig(
+                    "lyric.bilibiliAudioRecognitionEnabled",
+                ) ||
+                this.getBilibiliRecognitionConfig().key !== config.key
+            ) {
+                return;
+            }
+
+            const identity = getRecognizedSongIdentity(result);
+            const segmentStart = getRecognitionSegmentStart(
+                result.sourceStartTime,
+                result.songTime,
+            );
+            if (
+                !identity ||
+                (identity === this.recognizedSongIdentity &&
+                    this.recognizedSegmentStart !== null &&
+                    Math.abs(segmentStart - this.recognizedSegmentStart) < 5)
+            ) {
+                return;
+            }
+
+            const recognizedMusicItem: IMusic.IMusicItem = {
+                id: identity,
+                platform: currentMusicItem.platform,
+                title: result.title,
+                artist: result.artist,
+                album: result.album || "",
+                artwork: currentMusicItem.artwork,
+                duration: 0,
+            };
+            const isObsolete = () =>
+                revision !== this.recognitionRevision ||
+                abortController.signal.aborted ||
+                !this.trackPlayer.isCurrentMusic(currentMusicItem) ||
+                !this.appConfig.getConfig(
+                    "lyric.bilibiliAudioRecognitionEnabled",
+                ) ||
+                this.getBilibiliRecognitionConfig().key !== config.key;
+
+            let lrcSource: ILyric.ILyricSource | null = null;
+            if (config.provider === "netease" && result.platformSongId) {
+                lrcSource = await fetchNeteaseLyric(
+                    result.platformSongId,
+                    abortController.signal,
+                ).catch(() => null);
+            }
+            if (!lrcSource) {
+                lrcSource = await this.searchSimilarLyric(
+                    recognizedMusicItem,
+                    isObsolete,
+                    currentMusicItem.platform,
+                );
+            }
+            if (!lrcSource || isObsolete()) return;
+
+            const manualOffset =
+                getMediaExtraProperty(currentMusicItem, "lyricOffset") || 0;
+            this.lyricRequestRevision += 1;
+            const requestRevision = this.lyricRequestRevision;
+            await this.applyLyricSource(
+                currentMusicItem,
+                lrcSource,
+                segmentStart - manualOffset,
+                false,
+                {
+                    title: result.title,
+                    artist: result.artist,
+                },
+                requestRevision,
+            );
+            if (!isObsolete() && requestRevision === this.lyricRequestRevision) {
+                const lyricItems = this.lyricParser?.getLyricItems() || [];
+                const lastLyricTime = lyricItems[lyricItems.length - 1]?.time;
+                if (lastLyricTime !== undefined) {
+                    this.nextRecognitionPosition = Math.max(
+                        this.nextRecognitionPosition || 0,
+                        segmentStart +
+                            lastLyricTime +
+                            BILIBILI_RECOGNITION_AFTER_LAST_LYRIC,
+                    );
+                }
+                this.recognizedSongIdentity = identity;
+                this.recognizedSegmentStart = segmentStart;
+                this.recognizedSong = {
+                    title: result.title,
+                    artist: result.artist,
+                };
+            }
+        } finally {
+            if (this.recognitionAbortController === abortController) {
+                this.recognitionAbortController = undefined;
+            }
+            this.recognitionInFlight = false;
+        }
+    }
+
+    private async applyLyricSource(
+        musicItem: IMusic.IMusicItem,
+        lrcSource: ILyric.ILyricSource,
+        parserOffset: number,
+        ignoreProgress: boolean = false,
+        recognizedSong?: {
+            title: string;
+            artist: string;
+        },
+        requestRevision: number = this.lyricRequestRevision,
+    ) {
+        if (
+            requestRevision !== this.lyricRequestRevision ||
+            !this.trackPlayer.isCurrentMusic(musicItem)
+        ) {
+            return;
+        }
+
+        const parser = new LyricParser(lrcSource.rawLrc!, {
+            extra: { offset: parserOffset },
+            musicItem,
+            lyricSource: lrcSource,
+            translation: lrcSource.translation,
+        });
+
+        if (
+            requestRevision !== this.lyricRequestRevision ||
+            !this.trackPlayer.isCurrentMusic(musicItem)
+        ) {
+            return;
+        }
+
+        this.lyricParser = parser;
+        getDefaultStore().set(lyricStateAtom, {
+            loading: false,
+            lyrics: parser.getLyricItems(),
+            hasTranslation: !!lrcSource.translation,
+            meta: parser.getMeta(),
+            recognizedSong,
+        });
+
+        const currentLyric = ignoreProgress
+            ? parser.getLyricItems()?.[0] ?? null
+            : parser.getPosition(
+                (await this.trackPlayer.getProgress()).position,
+            );
+        if (
+            requestRevision === this.lyricRequestRevision &&
+            this.trackPlayer.isCurrentMusic(musicItem)
+        ) {
+            getDefaultStore().set(currentLyricItemAtom, currentLyric || null);
+        }
+    }
+
     private async refreshLyric(skipFetchLyricSourceIfSame: boolean = true, ignoreProgress: boolean = false) {
         const currentMusicItem = this.trackPlayer.currentMusic;
+        const requestRevision = ++this.lyricRequestRevision;
 
         // 如果没有当前音乐项，重置歌词状态
         if (!currentMusicItem) {
@@ -268,7 +571,10 @@ class LyricManager implements IInjectable {
             }
 
             // 切换到其他歌曲了, 直接返回
-            if (!this.trackPlayer.isCurrentMusic(currentMusicItem)) {
+            if (
+                requestRevision !== this.lyricRequestRevision ||
+                !this.trackPlayer.isCurrentMusic(currentMusicItem)
+            ) {
                 return;
             }
 
@@ -281,7 +587,10 @@ class LyricManager implements IInjectable {
             }
 
             // 切换到其他歌曲了, 直接返回
-            if (!this.trackPlayer.isCurrentMusic(currentMusicItem)) {
+            if (
+                requestRevision !== this.lyricRequestRevision ||
+                !this.trackPlayer.isCurrentMusic(currentMusicItem)
+            ) {
                 return;
             }
 
@@ -292,30 +601,33 @@ class LyricManager implements IInjectable {
                 return;
             }
 
-            this.lyricParser = new LyricParser(lrcSource.rawLrc!, {
-                extra: {
-                    offset: (getMediaExtraProperty(currentMusicItem, "lyricOffset") || 0) * -1,
-                },
-                musicItem: currentMusicItem,
-                lyricSource: lrcSource,
-                translation: lrcSource.translation,
-            });
+            const keepsRecognizedAlignment =
+                skipFetchLyricSourceIfSame &&
+                this.recognizedSegmentStart !== null &&
+                lrcSource === this.lyricParser?.lyricSource;
+            const manualOffset =
+                getMediaExtraProperty(currentMusicItem, "lyricOffset") || 0;
+            await this.applyLyricSource(
+                currentMusicItem,
+                lrcSource,
+                keepsRecognizedAlignment
+                    ? this.recognizedSegmentStart! - manualOffset
+                    : manualOffset * -1,
+                ignoreProgress,
+                keepsRecognizedAlignment ? this.recognizedSong : undefined,
+                requestRevision,
+            );
 
-            getDefaultStore().set(lyricStateAtom, {
-                loading: false,
-                lyrics: this.lyricParser.getLyricItems(),
-                hasTranslation: !!lrcSource.translation,
-                meta: this.lyricParser.getMeta(),
-            });
+            if (requestRevision !== this.lyricRequestRevision) return;
 
-            const currentLyric = ignoreProgress ? (this.lyricParser.getLyricItems()?.[0] ?? null) : this.lyricParser.getPosition((await this.trackPlayer.getProgress()).position);
-            getDefaultStore().set(currentLyricItemAtom, currentLyric || null);
+            const currentLyric = getDefaultStore().get(currentLyricItemAtom);
+            const parser = this.lyricParser;
 
             if (this.appConfig.getConfig("lyric.showStatusBarLyric")) {
-                if (currentLyric) {
+                if (currentLyric && parser) {
                     LyricUtil.setStatusBarLyricText(
                         (currentLyric?.lrc ?? "") +
-                        (this.lyricParser.hasTranslation
+                        (parser.hasTranslation
                             ? `\n${currentLyric?.translation ?? ""}`
                             : ""),
                     );
@@ -325,7 +637,10 @@ class LyricManager implements IInjectable {
                 }
             }
         } catch (err) {
-            if (this.trackPlayer.isCurrentMusic(currentMusicItem)) {
+            if (
+                requestRevision === this.lyricRequestRevision &&
+                this.trackPlayer.isCurrentMusic(currentMusicItem)
+            ) {
                 this.lyricParser = null;
                 this.setLyricAsNoLyricState();
             }
@@ -337,64 +652,47 @@ class LyricManager implements IInjectable {
      * @param musicItem 
      * @returns 
      */
-    private async searchSimilarLyric(musicItem: IMusic.IMusicItem) {
+    private async searchSimilarLyric(
+        musicItem: IMusic.IMusicItem,
+        isObsolete: () => boolean = () =>
+            !this.trackPlayer.isCurrentMusic(musicItem),
+        excludedPlatform: string = musicItem.platform,
+    ) {
         const keyword = musicItem.alias || musicItem.title;
-        const plugins = this.pluginManager.getSearchablePlugins("lyric");
-
-        let distance = Infinity;
-        let minDistanceMusicItem;
-        let targetPlugin: Plugin | null = null;
+        const plugins = this.pluginManager.getSortedSearchablePlugins("lyric");
+        const matches: Array<{
+            score: number;
+            musicItem: IMusic.IMusicItem;
+            plugin: Plugin;
+        }> = [];
 
         for (let plugin of plugins) {
-            // 如果插件不是当前音乐的插件，或者当前音乐不是正在播放的音乐，则跳过
-            if (
-                !this.trackPlayer.isCurrentMusic(musicItem)
-            ) {
-                return null;
-            }
+            if (isObsolete()) return null;
 
-            if (plugin.name === musicItem.platform) {
-                // 如果插件是当前音乐的插件，则跳过
-                continue;
-            }
+            if (plugin.name === excludedPlatform) continue;
 
             const results = await plugin.methods
                 .search(keyword, 1, "lyric")
                 .catch(() => null);
-
-            // 取前两个
-            const firstTwo = results?.data?.slice(0, 2) || [];
-
-            for (let item of firstTwo) {
-                if (
-                    item.title === keyword &&
-                    item.artist === musicItem.artist
-                ) {
-                    distance = 0;
-                    minDistanceMusicItem = item;
-                    targetPlugin = plugin;
-                    break;
-                } else {
-                    const dist =
-                        minDistance(keyword, musicItem.title) +
-                        minDistance(item.artist, musicItem.artist);
-                    if (dist < distance) {
-                        distance = dist;
-                        minDistanceMusicItem = item;
-                        targetPlugin = plugin;
-                    }
+            for (const item of results?.data?.slice(0, 5) || []) {
+                const score = scoreLyricCandidate(musicItem, item);
+                if (score <= MAX_LYRIC_MATCH_SCORE) {
+                    matches.push({
+                        score,
+                        musicItem: item,
+                        plugin,
+                    });
                 }
-            }
-
-            if (distance === 0) {
-                break;
             }
         }
 
-        if (minDistanceMusicItem && targetPlugin) {
-            return await targetPlugin.methods
-                .getLyric(minDistanceMusicItem)
+        matches.sort((left, right) => left.score - right.score);
+        for (const match of matches) {
+            if (isObsolete()) return null;
+            const lyric = await match.plugin.methods
+                .getLyric(match.musicItem)
                 .catch(() => null);
+            if (lyric) return lyric;
         }
 
         return null;

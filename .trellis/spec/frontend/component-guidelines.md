@@ -30,6 +30,28 @@
 - Give fixed-format controls and panes stable dimensions so labels, loading
   states, and selection changes do not shift surrounding layout.
 
+### Landscape Split Contract
+
+- Use `ResponsiveSplitView` at the page/content boundary when a landscape
+  screen has distinct primary and secondary regions. Keep `AppBar` and
+  `MusicBar` outside the split so they remain fixed across the full width.
+- The default split is `38:62`; playback detail explicitly passes `50:50`.
+  Override weights only when the current screen has a documented content
+  priority, rather than duplicating local row/flex geometry.
+- Apply `HorizontalSafeAreaView` once around the complete split, not once per
+  pane. Each pane and every parent of a virtualized list must remain bounded by
+  `flex: 1`, `minWidth: 0`, and, where vertical scrolling is involved,
+  `minHeight: 0`.
+
+```tsx
+<HorizontalSafeAreaView style={globalStyle.flex1}>
+    <ResponsiveSplitView
+        primary={<MetadataPane />}
+        secondary={<MusicList />}
+    />
+</HorizontalSafeAreaView>
+```
+
 ## Lists
 
 - Use `FlashList` for long media/result lists and provide a stable

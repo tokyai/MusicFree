@@ -66,6 +66,7 @@ const createRadio = function (
     const onPress = () => {
         showDialog("RadioDialog", {
             title,
+            defaultSelected: value,
             content: valueMap
                 ? candidates.map(_ => ({
                     label: valueMap[_] as string,
@@ -140,6 +141,8 @@ export default function BasicSetting() {
     const showExitOnNotification = useAppConfig("basic.showExitOnNotification");
     const musicOrderInLocalSheet = useAppConfig("basic.musicOrderInLocalSheet");
     const tryChangeSourceWhenPlayFail = useAppConfig("basic.tryChangeSourceWhenPlayFail");
+    const carDisplayMode = useAppConfig("basic.carDisplayMode");
+    const carDisplayFontSize = useAppConfig("basic.carDisplayFontSize");
 
     const { t } = useI18N();
 
@@ -242,6 +245,21 @@ export default function BasicSetting() {
                     t("basicSettings.showExitOnNotification"),
                     "basic.showExitOnNotification",
                     showExitOnNotification ?? false,
+                ),
+                createSwitch(
+                    t("basicSettings.carDisplayMode"),
+                    "basic.carDisplayMode",
+                    carDisplayMode ?? false,
+                ),
+                createRadio(
+                    t("basicSettings.carDisplayFontSize"),
+                    "basic.carDisplayFontSize",
+                    ["medium", "large"],
+                    carDisplayFontSize ?? "medium",
+                    {
+                        medium: t("basicSettings.carDisplayFontSize.medium"),
+                        large: t("basicSettings.carDisplayFontSize.large"),
+                    },
                 ),
             ],
         },

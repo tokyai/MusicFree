@@ -9,6 +9,8 @@ import globalStyle from "@/constants/globalStyle";
 import { View } from "react-native";
 import Operations from "./operations";
 import { showPanel } from "@/components/panels/usePanel.ts";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface IProps {
     onTurnPageClick?: () => void;
@@ -19,6 +21,8 @@ export default function AlbumCover(props: IProps) {
 
     const musicItem = useCurrentMusic();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const safeAreaInsets = useSafeAreaInsets();
 
     const artworkStyle = useMemo(() => {
         if (orientation === "vertical") {
@@ -27,12 +31,33 @@ export default function AlbumCover(props: IProps) {
                 height: rpx(500),
             };
         } else {
+            const legacySize = displayMetrics.isCarMode
+                ? displayMetrics.scaleRpx(260)
+                : rpx(260);
+            const availableSize =
+                displayMetrics.height -
+                safeAreaInsets.top -
+                safeAreaInsets.bottom -
+                displayMetrics.appBarHeight -
+                displayMetrics.minTouchTarget * 3 -
+                displayMetrics.scaleRpx(32);
+            const artworkSize = displayMetrics.isCarMode
+                ? Math.min(
+                    legacySize,
+                    Math.max(displayMetrics.minTouchTarget, availableSize),
+                )
+                : legacySize;
             return {
-                width: rpx(260),
-                height: rpx(260),
+                width: artworkSize,
+                height: artworkSize,
             };
         }
-    }, [orientation]);
+    }, [
+        displayMetrics,
+        orientation,
+        safeAreaInsets.bottom,
+        safeAreaInsets.top,
+    ]);
 
     const longPress = Gesture.LongPress()
         .onStart(() => {

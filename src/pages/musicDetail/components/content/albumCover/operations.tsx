@@ -17,6 +17,7 @@ import Icon from "@/components/base/icon.tsx";
 import PluginManager from "@/core/pluginManager";
 import downloader from "@/core/downloader";
 import i18n from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function Operations() {
     const musicItem = useCurrentMusic();
@@ -25,6 +26,21 @@ export default function Operations() {
 
     const rate = PersistStatus.useValue("music.rate", 100);
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const operationSize = displayMetrics.isCarMode
+        ? displayMetrics.iconSizes.normal
+        : iconSizeConst.normal;
+    const qualitySize = displayMetrics.isCarMode
+        ? Math.max(displayMetrics.scaleRpx(52), operationSize)
+        : rpx(52);
+    const operationButtonStyle = displayMetrics.isCarMode
+        ? {
+            minWidth: displayMetrics.minTouchTarget,
+            minHeight: displayMetrics.minTouchTarget,
+            alignItems: "center" as const,
+            justifyContent: "center" as const,
+        }
+        : null;
 
     const supportComment = useMemo(() => {
         return !musicItem
@@ -37,9 +53,18 @@ export default function Operations() {
             style={[
                 styles.wrapper,
                 orientation === "horizontal" ? styles.horizontalWrapper : null,
+                displayMetrics.isCarMode
+                    ? {
+                        height: Math.max(
+                            rpx(80),
+                            displayMetrics.minTouchTarget,
+                        ),
+                    }
+                    : null,
             ]}>
             <HeartIcon />
             <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     if (!musicItem) {
                         return;
@@ -57,12 +82,18 @@ export default function Operations() {
                 }}>
                 <Image
                     source={ImgAsset.quality[currentQuality]}
-                    style={styles.quality}
+                    style={[
+                        styles.quality,
+                        displayMetrics.isCarMode
+                            ? { width: qualitySize, height: qualitySize }
+                            : null,
+                    ]}
                 />
             </Pressable>
             <Icon
                 name={isDownloaded ? "check-circle-outline" : "arrow-down-tray"}
-                size={iconSizeConst.normal}
+                size={operationSize}
+                style={operationButtonStyle}
                 color="white"
                 onPress={() => {
                     if (musicItem && !isDownloaded) {
@@ -77,6 +108,7 @@ export default function Operations() {
                 }}
             />
             <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     if (!musicItem) {
                         return;
@@ -92,11 +124,20 @@ export default function Operations() {
                         },
                     });
                 }}>
-                <Image source={ImgAsset.rate[rate!]} style={styles.quality} />
+                <Image
+                    source={ImgAsset.rate[rate!]}
+                    style={[
+                        styles.quality,
+                        displayMetrics.isCarMode
+                            ? { width: qualitySize, height: qualitySize }
+                            : null,
+                    ]}
+                />
             </Pressable>
             <Icon
                 name="chat-bubble-oval-left-ellipsis"
-                size={iconSizeConst.normal}
+                size={operationSize}
+                style={operationButtonStyle}
                 color="white"
                 opacity={supportComment ? 1 : 0.2}
                 onPress={() => {
@@ -113,7 +154,8 @@ export default function Operations() {
             />
             <Icon
                 name="ellipsis-vertical"
-                size={iconSizeConst.normal}
+                size={operationSize}
+                style={operationButtonStyle}
                 color="white"
                 onPress={() => {
                     if (musicItem) {

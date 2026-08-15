@@ -17,6 +17,7 @@ import { DrawerContentScrollView } from "@react-navigation/drawer";
 import React, { memo } from "react";
 import { BackHandler, Platform, StyleSheet, View } from "react-native";
 import { default as DeviceInfo, default as deviceInfoModule } from "react-native-device-info";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(108);
 
@@ -27,6 +28,7 @@ interface ISettingOptions {
 }
 
 function HomeDrawer(props: any) {
+    const displayMetrics = useDisplayMetrics();
     const navigate = useNavigate();
     function navigateToSetting(settingType: string) {
         navigate(ROUTE_PATH.SETTING, {
@@ -84,7 +86,19 @@ function HomeDrawer(props: any) {
         <>
             <PageBackground />
             <DrawerContentScrollView {...[props]} style={style.scrollWrapper}>
-                <View style={style.header}>
+                <View
+                    style={[
+                        style.header,
+                        displayMetrics.isCarMode
+                            ? {
+                                height: Math.max(
+                                    displayMetrics.scaleRpx(120),
+                                    displayMetrics.appBarHeight,
+                                ),
+                                marginLeft: displayMetrics.horizontalPadding,
+                            }
+                            : null,
+                    ]}>
                     <ThemeText fontSize="appbar" fontWeight="bold">
                         {DeviceInfo.getApplicationName()}
                     </ThemeText>

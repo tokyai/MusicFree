@@ -12,6 +12,7 @@ import useColors from "@/hooks/useColors";
 import TrackPlayer, { useCurrentMusic, usePlayList } from "@/core/trackPlayer";
 import { FlashList } from "@shopify/flash-list";
 import Icon from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(108);
 const ITEM_WIDTH = rpx(750);
@@ -24,18 +25,35 @@ interface IPlayListProps {
 function _PlayListItem(props: IPlayListProps) {
     const colors = useColors();
     const { item, isCurrentMusic } = props;
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? Math.max(ITEM_HEIGHT, displayMetrics.minTouchTarget)
+        : ITEM_HEIGHT;
 
     return (
         <Pressable
             onPress={() => {
                 TrackPlayer.play(item);
             }}
-            style={style.musicItem}>
+            style={[
+                style.musicItem,
+                displayMetrics.isCarMode
+                    ? {
+                        height: itemHeight,
+                        minHeight: displayMetrics.minTouchTarget,
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                    }
+                    : null,
+            ]}>
             {isCurrentMusic && (
                 <Icon
                     name="musical-note"
                     color={colors.textHighlight ?? colors.primary}
-                    size={fontSizeConst.content}
+                    size={
+                        displayMetrics.isCarMode
+                            ? displayMetrics.iconSizes.normal
+                            : fontSizeConst.content
+                    }
                     style={style.currentPlaying}
                 />
             )}
@@ -52,7 +70,15 @@ function _PlayListItem(props: IPlayListProps) {
                 numberOfLines={1}>
                 {item.title}
                 {item.artist && (
-                    <Text style={{ fontSize: fontSizeConst.description }}>
+                    <Text
+                        style={
+                            displayMetrics.isCarMode
+                                ? {
+                                    fontSize:
+                                        displayMetrics.fontSizes.description,
+                                }
+                                : { fontSize: fontSizeConst.description }
+                        }>
                         {" "}
                         - {item.artist}
                     </Text>
@@ -87,6 +113,10 @@ export default function Body(props: IBodyProps) {
     const currentMusicItem = useCurrentMusic();
     const listRef = useRef<FlashList<IMusic.IMusicItem> | null>();
     const safeAreaInsets = useSafeAreaInsets();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? Math.max(ITEM_HEIGHT, displayMetrics.minTouchTarget)
+        : ITEM_HEIGHT;
 
     const initIndex = useMemo(() => {
         const id = playList.findIndex(_ =>
@@ -123,7 +153,7 @@ export default function Body(props: IBodyProps) {
                     listRef.current = _;
                 }}
                 extraData={{ currentMusicItem }}
-                estimatedItemSize={ITEM_HEIGHT}
+                estimatedItemSize={itemHeight}
                 data={playList}
                 initialScrollIndex={initIndex}
                 renderItem={renderItem}

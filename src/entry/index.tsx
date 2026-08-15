@@ -18,6 +18,7 @@ import { ReduceMotion, ReducedMotionConfig } from "react-native-reanimated";
 import { routes } from "@/core/router/routes.tsx";
 import ErrorBoundary from "@/components/errorBoundary";
 import NeteaseFingerprintSandbox from "@/components/neteaseFingerprintSandbox";
+import { DisplayMetricsProvider } from "@/hooks/useDisplayMetrics";
 
 /**
  * 字体颜色
@@ -34,36 +35,38 @@ export default function Pages() {
 
     return (
         <ErrorBoundary>
-            <BootstrapComponent />
-            <ReducedMotionConfig mode={ReduceMotion.Never} />
-            <GestureHandlerRootView style={globalStyle.flex1}>
-                <SafeAreaProvider>
-                    <NeteaseFingerprintSandbox />
-                    <NavigationContainer theme={theme}>
-                        <PageBackground />
-                        <Stack.Navigator
-                            initialRouteName={routes[0].path}
-                            screenOptions={{
-                                headerShown: false,
-                                animation: "slide_from_right",
-                                animationDuration: 100,
-                            }}>
-                            {routes.map(route => (
-                                <Stack.Screen
-                                    key={route.path}
-                                    name={route.path}
-                                    component={route.component}
-                                />
-                            ))}
-                        </Stack.Navigator>                        
-                        <Panels />
-                        <Dialogs />
-                        <Debug />
-                        <ToastBaseComponent />
-                        <PortalHost />
-                    </NavigationContainer>
-                </SafeAreaProvider>
-            </GestureHandlerRootView>
+            <DisplayMetricsProvider>
+                <BootstrapComponent />
+                <ReducedMotionConfig mode={ReduceMotion.Never} />
+                <GestureHandlerRootView style={globalStyle.flex1}>
+                    <SafeAreaProvider>
+                        <NeteaseFingerprintSandbox />
+                        <NavigationContainer theme={theme}>
+                            <PageBackground />
+                            <Stack.Navigator
+                                initialRouteName={routes[0].path}
+                                screenOptions={{
+                                    headerShown: false,
+                                    animation: "slide_from_right",
+                                    animationDuration: 100,
+                                }}>
+                                {routes.map(route => (
+                                    <Stack.Screen
+                                        key={route.path}
+                                        name={route.path}
+                                        component={route.component}
+                                    />
+                                ))}
+                            </Stack.Navigator>
+                            <Panels />
+                            <Dialogs />
+                            <Debug />
+                            <ToastBaseComponent />
+                            <PortalHost />
+                        </NavigationContainer>
+                    </SafeAreaProvider>
+                </GestureHandlerRootView>
+            </DisplayMetricsProvider>
         </ErrorBoundary>
     );
 }

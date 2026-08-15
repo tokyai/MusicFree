@@ -5,14 +5,24 @@ import Slider from "@react-native-community/slider";
 import timeformat from "@/utils/timeformat";
 import { fontSizeConst } from "@/constants/uiConst";
 import TrackPlayer, { useProgress } from "@/core/trackPlayer";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface ITimeLabelProps {
     time: number;
 }
 
 function TimeLabel(props: ITimeLabelProps) {
+    const displayMetrics = useDisplayMetrics();
     return (
-        <Text style={style.text}>{timeformat(Math.max(props.time, 0))}</Text>
+        <Text
+            style={[
+                style.text,
+                displayMetrics.isCarMode
+                    ? { fontSize: displayMetrics.fontSizes.description }
+                    : null,
+            ]}>
+            {timeformat(Math.max(props.time, 0))}
+        </Text>
     );
 }
 
@@ -20,12 +30,27 @@ export default function SeekBar() {
     const progress = useProgress(1000);
     const [tmpProgress, setTmpProgress] = useState<number | null>(null);
     const slidingRef = useRef(false);
+    const displayMetrics = useDisplayMetrics();
 
     return (
-        <View style={style.wrapper}>
+        <View
+            style={[
+                style.wrapper,
+                displayMetrics.isCarMode
+                    ? {
+                        height: displayMetrics.minTouchTarget,
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                    }
+                    : null,
+            ]}>
             <TimeLabel time={tmpProgress ?? progress.position} />
             <Slider
-                style={style.slider}
+                style={[
+                    style.slider,
+                    displayMetrics.isCarMode
+                        ? { height: displayMetrics.minTouchTarget }
+                        : null,
+                ]}
                 minimumTrackTintColor={"#cccccc"}
                 maximumTrackTintColor={"#999999"}
                 thumbTintColor={"#dddddd"}

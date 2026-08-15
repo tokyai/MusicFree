@@ -12,6 +12,7 @@ import Icon from "../base/icon";
 import { iconSizeConst } from "@/constants/uiConst";
 import useColors from "@/hooks/useColors";
 import useOrientation from "@/hooks/useOrientation";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IMusicListProps {
     /** 顶部 */
@@ -54,6 +55,10 @@ export default function MusicList(props: IMusicListProps) {
     } = props;    
     const colors = useColors();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.big ?? ITEM_HEIGHT
+        : ITEM_HEIGHT;
     const flashListRef = useRef<FlashList<IMusic.IMusicItem>>(null);
     const [showBadge, setShowBadge] = useState(false);
     const hideTimeoutRef = useRef<NodeJS.Timeout>();
@@ -121,7 +126,7 @@ export default function MusicList(props: IMusicListProps) {
                 }
                 extraData={highlightMusicItem}
                 data={musicList ?? []}
-                estimatedItemSize={ITEM_HEIGHT}
+                estimatedItemSize={itemHeight}
                 onScrollBeginDrag={handleScrollBegin}
                 onScrollEndDrag={handleScrollEnd}
                 onMomentumScrollEnd={handleScrollEnd}
@@ -157,12 +162,27 @@ export default function MusicList(props: IMusicListProps) {
             {showBadge && (
                 <View style={styles.badge} pointerEvents="box-none">
                     <Pressable
-                        style={[styles.badgeButton, { backgroundColor: colors.notification }]}
+                        style={[
+                            styles.badgeButton,
+                            displayMetrics.isCarMode
+                                ? {
+                                    width: displayMetrics.minTouchTarget,
+                                    height: displayMetrics.minTouchTarget,
+                                    borderRadius:
+                                        displayMetrics.minTouchTarget / 2,
+                                }
+                                : null,
+                            { backgroundColor: colors.notification },
+                        ]}
                         onPress={scrollToHighlight}
                     >
                         <Icon
                             name="crosshair"
-                            size={iconSizeConst.normal}
+                            size={
+                                displayMetrics.isCarMode
+                                    ? displayMetrics.iconSizes.normal
+                                    : iconSizeConst.normal
+                            }
                             color={colors.text}
                         />
                     </Pressable>

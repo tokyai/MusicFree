@@ -8,6 +8,7 @@ import { useAtom } from "jotai";
 import React, { useEffect, useRef, useState } from "react";
 import useQueryArtist from "../hooks/useQuery";
 import { IQueryResult, scrollToTopAtom } from "../store/atoms";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(120);
 
@@ -21,6 +22,10 @@ export default function ResultList(props: IResultListProps) {
     const [scrollToTopState, setScrollToTopState] = useAtom(scrollToTopAtom);
     const lastScrollY = useRef<number>(0);
     const { pluginHash, artistItem } = useParams<"artist-detail">();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.big ?? ITEM_HEIGHT
+        : ITEM_HEIGHT;
     const [queryState, setQueryState] = useState<RequestStateCode>(
         data?.state ?? RequestStateCode.IDLE,
     );
@@ -41,11 +46,11 @@ export default function ResultList(props: IResultListProps) {
                 const currentY = e.nativeEvent.contentOffset.y;
                 if (
                     !scrollToTopState &&
-                    currentY < ITEM_HEIGHT * 8 - rpx(350)
+                    currentY < itemHeight * 8 - rpx(350)
                 ) {
                     currentY < lastScrollY.current && setScrollToTopState(true);
                 } else {
-                    if (scrollToTopState && currentY > ITEM_HEIGHT * 8) {
+                    if (scrollToTopState && currentY > itemHeight * 8) {
                         currentY > lastScrollY.current &&
                             setScrollToTopState(false);
                     }
@@ -65,7 +70,7 @@ export default function ResultList(props: IResultListProps) {
                     queryState === RequestStateCode.PARTLY_DONE) &&
                     queryArtist(artistItem, undefined, tab);
             }}
-            estimatedItemSize={ITEM_HEIGHT}
+            estimatedItemSize={itemHeight}
             overScrollMode="always" 
             data={data.data ?? []}
             renderItem={renderItem}

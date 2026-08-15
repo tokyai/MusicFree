@@ -10,6 +10,7 @@ import {
 import ThemeText from "@/components/base/themeText";
 import useColors from "@/hooks/useColors";
 import rpx from "@/utils/rpx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export interface ILandscapeNavigationRailItem {
     key: string;
@@ -35,6 +36,7 @@ export default function LandscapeNavigationRail(
 ) {
     const { sections, style } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     const selectedItemStyle: ViewStyle = {
         backgroundColor: colors.card,
         borderLeftColor: colors.primary,
@@ -75,6 +77,16 @@ export default function LandscapeNavigationRail(
                                 onPress={() => section.onSelect(item.key)}
                                 style={[
                                     styles.item,
+                                    displayMetrics.isCarMode
+                                        ? {
+                                            minHeight:
+                                                displayMetrics.navigationItemHeight,
+                                            paddingHorizontal:
+                                                displayMetrics.horizontalPadding,
+                                            paddingVertical:
+                                                displayMetrics.scaleRpx(14),
+                                        }
+                                        : null,
                                     selected
                                         ? selectedItemStyle
                                         : styles.unselectedItem,

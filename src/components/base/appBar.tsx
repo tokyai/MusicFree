@@ -25,6 +25,7 @@ import Animated, {
 import Portal from "./portal";
 import ListItem from "./listItem";
 import { IIconName } from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IAppBarProps {
     titleTextOpacity?: number;
@@ -72,6 +73,7 @@ export default function AppBar(props: IAppBarProps) {
     } = props;
 
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     const navigation = useNavigation();
 
     const bgColor = color(colors.appBar ?? colors.primary).toString();
@@ -103,6 +105,14 @@ export default function AppBar(props: IAppBarProps) {
                 style={[
                     styles.container,
                     containerStyle,
+                    displayMetrics.isCarMode
+                        ? {
+                            height: displayMetrics.appBarHeight,
+                            minHeight: displayMetrics.minTouchTarget,
+                            paddingHorizontal:
+                                displayMetrics.horizontalPadding,
+                        }
+                        : null,
                     { backgroundColor: bgColor },
                 ]}>
                 <IconButton
@@ -120,7 +130,9 @@ export default function AppBar(props: IAppBarProps) {
                 <View style={[globalStyle.grow, styles.content, contentStyle]}>
                     {typeof children === "string" ? (
                         <ThemeText
-                            fontSize="title"
+                            fontSize={
+                                displayMetrics.isCarMode ? "appbar" : "title"
+                            }
                             fontWeight="bold"
                             numberOfLines={1}
                             color={
@@ -209,6 +221,22 @@ export default function AppBar(props: IAppBarProps) {
                             },
                             transformStyle,
                             styles.menu,
+                            displayMetrics.isCarMode
+                                ? {
+                                    width: Math.min(
+                                        Math.max(
+                                            displayMetrics.scaleRpx(340),
+                                            displayMetrics.minTouchTarget * 4,
+                                        ),
+                                        displayMetrics.width -
+                                            displayMetrics.horizontalPadding * 2,
+                                    ),
+                                    maxHeight:
+                                        displayMetrics.height -
+                                        displayMetrics.appBarHeight -
+                                        displayMetrics.horizontalPadding * 2,
+                                }
+                                : null,
                         ]}>
                         {menu.map(it =>
                             it.show !== false ? (

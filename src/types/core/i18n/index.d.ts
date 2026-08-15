@@ -292,6 +292,10 @@ export interface ILanguageData {
     "basicSettings.associateLyricType.input": string; // 输入
     "basicSettings.associateLyricType.search": string; // 搜索
     "basicSettings.showExitOnNotification": string; // 通知中显示退出
+    "basicSettings.carDisplayMode": string; // 车机显示模式
+    "basicSettings.carDisplayFontSize": string; // 车机字号档位
+    "basicSettings.carDisplayFontSize.medium": string; // 适中
+    "basicSettings.carDisplayFontSize.large": string; // 大字
     "basicSettings.sheetAndAlbum": string; // 歌单和专辑
     "basicSettings.clickMusicInSearch": string; // 点击搜索中的音乐
     "basicSettings.clickMusicInSearch.playMusic": string; // 播放歌曲

@@ -4,6 +4,7 @@ import rpx from "@/utils/rpx";
 import ThemeText from "./themeText";
 import useColors from "@/hooks/useColors";
 import IconButton from "./iconButton";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IChipProps {
     containerStyle?: StyleProp<ViewStyle>;
@@ -14,12 +15,20 @@ interface IChipProps {
 export default function Chip(props: IChipProps) {
     const { containerStyle, children, onPress, onClose } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
 
     return (
         <Pressable
             onPress={onPress}
             style={[
                 styles.container,
+                displayMetrics.isCarMode
+                    ? {
+                        height: displayMetrics.chipHeight,
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                        borderRadius: displayMetrics.chipHeight / 2,
+                    }
+                    : null,
                 {
                     backgroundColor: colors.placeholder,
                 },

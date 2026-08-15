@@ -23,6 +23,8 @@ import { fontSizeConst } from "@/constants/uiConst";
 import { ScrollView } from "react-native-gesture-handler";
 import useOrientation from "@/hooks/useOrientation.ts";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { getDisplayOverlayWidth } from "@/utils/displayMetrics";
 
 interface IDialogProps {
     onDismiss?: () => void;
@@ -37,12 +39,30 @@ function Dialog(props: IDialogProps) {
     const backHandlerRef = useRef<NativeEventSubscription>();
     const orientation = useOrientation();
     const safeAreaInsets = useSafeAreaInsets();
-    const availableHeight =
-        vh(100) - safeAreaInsets.top - safeAreaInsets.bottom - rpx(48);
+    const displayMetrics = useDisplayMetrics();
+    const horizontalMargin = displayMetrics.isCarMode
+        ? displayMetrics.horizontalPadding
+        : rpx(36);
+    const availableWidth = Math.max(
+        1,
+        displayMetrics.width -
+            safeAreaInsets.left -
+            safeAreaInsets.right -
+            horizontalMargin * 2,
+    );
+    const availableHeight = displayMetrics.isCarMode
+        ? displayMetrics.height -
+          safeAreaInsets.top -
+          safeAreaInsets.bottom -
+          displayMetrics.horizontalPadding * 2
+        : vh(100) - safeAreaInsets.top - safeAreaInsets.bottom - rpx(48);
 
     // 对话框宽度
-    const dialogContainerStyle: ViewStyle =
-        orientation === "vertical"
+    const dialogContainerStyle: ViewStyle = displayMetrics.isCarMode
+        ? {
+            width: getDisplayOverlayWidth("dialog", availableWidth),
+        }
+        : orientation === "vertical"
             ? {
                 width: vw(100) - rpx(72),
             }
@@ -130,10 +150,23 @@ interface IDialogTitleProps {
 
 function Title(props: IDialogTitleProps) {
     const { children, withDivider, stringContent, containerStyle } = props;
+    const displayMetrics = useDisplayMetrics();
 
     return (
         <>
-            <View style={[styles.titleContainer, containerStyle]}>
+            <View
+                style={[
+                    styles.titleContainer,
+                    containerStyle,
+                    displayMetrics.isCarMode
+                        ? {
+                            minHeight: displayMetrics.appBarHeight,
+                            height: displayMetrics.appBarHeight,
+                            paddingHorizontal:
+                                displayMetrics.horizontalPadding,
+                        }
+                        : null,
+                ]}>
                 {typeof children === "string" || stringContent ? (
                     <ThemeText
                         fontSize="title"
@@ -160,8 +193,18 @@ function Content(props: IDialogContentProps) {
     const { children, style, needScroll } = props;
     const orientation = useOrientation();
     const safeAreaInsets = useSafeAreaInsets();
-    const maxContentHeight =
-        orientation === "horizontal"
+    const displayMetrics = useDisplayMetrics();
+    const maxContentHeight = displayMetrics.isCarMode
+        ? Math.max(
+            displayMetrics.minTouchTarget,
+            displayMetrics.height -
+                safeAreaInsets.top -
+                safeAreaInsets.bottom -
+                displayMetrics.appBarHeight -
+                displayMetrics.buttonHeight -
+                displayMetrics.horizontalPadding * 4,
+        )
+        : orientation === "horizontal"
             ? Math.max(
                 rpx(160),
                 vh(100) -
@@ -186,6 +229,9 @@ function Content(props: IDialogContentProps) {
                 styles.contentContainer,
                 {
                     maxHeight: maxContentHeight,
+                    paddingHorizontal: displayMetrics.isCarMode
+                        ? displayMetrics.horizontalPadding
+                        : undefined,
                 },
                 style,
             ]}>
@@ -207,6 +253,7 @@ interface IDialogActionsProps {
 
 function Actions(props: IDialogActionsProps) {
     const { children, style, actions } = props;
+    const displayMetrics = useDisplayMetrics();
 
     const validActions = useMemo(
         () => actions?.filter(it => it.show !== false),
@@ -232,7 +279,23 @@ function Actions(props: IDialogActionsProps) {
     );
 
     return (
-        <View style={[styles.actionsContainer, style]}>
+        <View
+            style={[
+                styles.actionsContainer,
+                style,
+                displayMetrics.isCarMode
+                    ? {
+                        minHeight:
+                            displayMetrics.buttonHeight +
+                            displayMetrics.scaleRpx(12),
+                        height:
+                            displayMetrics.buttonHeight +
+                            displayMetrics.scaleRpx(12),
+                        paddingHorizontal:
+                            displayMetrics.horizontalPadding,
+                    }
+                    : null,
+            ]}>
             {typeof children === "string" ? (
                 <ThemeText fontSize="content" numberOfLines={1}>
                     {children}
@@ -252,6 +315,7 @@ function BottomButton(props: {
 }) {
     const { type = "normal", text, style, onPress } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
 
     return (
         <TouchableOpacity
@@ -259,6 +323,12 @@ function BottomButton(props: {
             onPress={onPress}
             style={[
                 styles.bottomBtn,
+                displayMetrics.isCarMode
+                    ? {
+                        height: displayMetrics.buttonHeight,
+                        minHeight: displayMetrics.minTouchTarget,
+                    }
+                    : null,
                 {
                     backgroundColor:
                         type === "normal" ? colors.placeholder : colors.primary,

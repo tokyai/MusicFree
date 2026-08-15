@@ -6,6 +6,7 @@ import { iconSizeConst } from "@/constants/uiConst";
 import useColors from "@/hooks/useColors";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import Icon, { IIconName } from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IProps {
     icon: IIconName;
@@ -16,13 +17,35 @@ interface IProps {
 export default function (props: IProps) {
     const { icon, children, onPress, containerStyle } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
 
     return (
         <TouchableOpacity
             activeOpacity={0.7}
-            style={[style.container, containerStyle]}
+            style={[
+                style.container,
+                displayMetrics.isCarMode
+                    ? {
+                        minHeight: displayMetrics.minTouchTarget,
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                        paddingVertical: displayMetrics.scaleRpx(8),
+                    }
+                    : null,
+                containerStyle,
+            ]}
             onPress={onPress}>
-            <Icon name={icon} size={iconSizeConst.light} color={colors.text} />
+            <Icon
+                name={icon}
+                size={
+                    displayMetrics.isCarMode
+                        ? Math.max(
+                            iconSizeConst.light,
+                            displayMetrics.iconSizes.light,
+                        )
+                        : iconSizeConst.light
+                }
+                color={colors.text}
+            />
             <ThemeText style={style.text} fontSize={"content"}>
                 {children}
             </ThemeText>

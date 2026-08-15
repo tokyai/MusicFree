@@ -14,6 +14,7 @@ import { useAtom, useSetAtom } from "jotai";
 import React, { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { editingMusicListAtom, musicListChangedAtom } from "../store/atom";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IBottomProps {
     landscape?: boolean;
@@ -118,20 +119,33 @@ interface IBottomIconProps {
 function BottomIcon(props: IBottomIconProps) {
     const { icon, title, onPress, color = "text", landscape = false } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     return (
         <Pressable
             onPress={onPress}
             style={[
                 style.bottomIconWrapper,
                 landscape ? style.landscapeIconWrapper : null,
+                displayMetrics.isCarMode
+                    ? {
+                        minHeight: displayMetrics.minTouchTarget,
+                        height: landscape
+                            ? displayMetrics.minTouchTarget
+                            : undefined,
+                        paddingVertical: displayMetrics.scaleRpx(8),
+                    }
+                    : null,
                 { backgroundColor: colors.appBar },
             ]}>
             <Icon
                 name={icon}
                 color={colors.appBarText}
                 style={color === "textSecondary" ? style.opacity_06 : undefined}
-                size={iconSizeConst.big}
-                onPress={onPress}
+                size={
+                    displayMetrics.isCarMode
+                        ? displayMetrics.iconSizes.big
+                        : iconSizeConst.big
+                }
             />
             <ThemeText
                 fontSize="subTitle"

@@ -10,6 +10,7 @@ import useColors from "@/hooks/useColors.ts";
 import ThemeText from "@/components/base/themeText";
 import Tip from "@/components/base/tip";
 import { iconSizeConst } from "@/constants/uiConst";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IKV<T extends string | number = string | number> {
     label: string;
@@ -33,7 +34,11 @@ export default function RadioDialog(props: IRadioDialogProps) {
     const { title, content, onOk, defaultSelected, tip } = props;
     const orientation = useOrientation();
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     const ref = useRef<FlatList | null>(null);
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.small ?? ListItem.Size.small
+        : ListItem.Size.small;
 
     const defaultSelectedIndex = useMemo(() => {
         return content.findIndex(item => {
@@ -66,7 +71,15 @@ export default function RadioDialog(props: IRadioDialogProps) {
                     </ThemeText>
 
                     {tip ? <Tip content={tip} position='top'>
-                        <Icon name='question-mark-circle' size={iconSizeConst.light} color={colors.text} />
+                        <Icon
+                            name="question-mark-circle"
+                            size={
+                                displayMetrics.isCarMode
+                                    ? displayMetrics.iconSizes.light
+                                    : iconSizeConst.light
+                            }
+                            color={colors.text}
+                        />
                     </Tip> : null}
                 </>
             </Dialog.Title>
@@ -75,12 +88,18 @@ export default function RadioDialog(props: IRadioDialogProps) {
                 ref={ref}
                 style={{
                     maxHeight:
-                        orientation === "horizontal" ? vmin(60) : vmax(60),
+                        displayMetrics.isCarMode
+                            ? (orientation === "horizontal"
+                                ? displayMetrics.shortEdge
+                                : displayMetrics.longEdge) * 0.6
+                            : orientation === "horizontal"
+                                ? vmin(60)
+                                : vmax(60),
                 }}
                 data={content}
                 getItemLayout={(_, index) => ({
-                    length: ListItem.Size.normal,
-                    offset: ListItem.Size.normal * index,
+                    length: itemHeight,
+                    offset: itemHeight * index,
                     index,
                 })}
                 renderItem={({ item }) => {

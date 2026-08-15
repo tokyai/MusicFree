@@ -11,6 +11,7 @@ import Portal from "./portal";
 import rpx from "@/utils/rpx";
 import useColors from "@/hooks/useColors";
 import { timingConfig } from "@/constants/commonConst";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 type TipPosition = "top" | "bottom" | "left" | "right";
 
@@ -120,6 +121,7 @@ const TipPortal = ({
     onHide,
     autoHideDuration,
 }: ITipPortalProps) => {
+    const displayMetrics = useDisplayMetrics();
     const opacity = useSharedValue(0);
     const scale = useSharedValue(0.8);
     const [tipDimensions, setTipDimensions] = useState({ width: 0, height: 0 });
@@ -176,10 +178,41 @@ const TipPortal = ({
         // 测量阶段，先渲染不可见的tip来获取尺寸
         return (
             <View
-                style={[styles.tipContainer, styles.measurementContainer]}
+                style={[
+                    styles.tipContainer,
+                    styles.measurementContainer,
+                    displayMetrics.isCarMode
+                        ? {
+                            maxWidth: Math.min(
+                                displayMetrics.width -
+                                    displayMetrics.horizontalPadding * 2,
+                                Math.max(
+                                    displayMetrics.scaleRpx(300),
+                                    displayMetrics.minTouchTarget * 5,
+                                ),
+                            ),
+                            paddingHorizontal:
+                                displayMetrics.horizontalPadding,
+                        }
+                        : null,
+                ]}
                 onLayout={handleLayout}
             >
-                <Text style={[styles.tipText, { color: textColor }]}>{content}</Text>
+                <Text
+                    style={[
+                        styles.tipText,
+                        displayMetrics.isCarMode
+                            ? {
+                                fontSize:
+                                    displayMetrics.fontSizes.description,
+                                lineHeight:
+                                    displayMetrics.fontSizes.description * 1.35,
+                            }
+                            : null,
+                        { color: textColor },
+                    ]}>
+                    {content}
+                </Text>
             </View>
         );
     }
@@ -201,10 +234,36 @@ const TipPortal = ({
                     left: tipLeft,
                     top: tipTop,
                 },
+                displayMetrics.isCarMode
+                    ? {
+                        maxWidth: Math.min(
+                            displayMetrics.width -
+                                displayMetrics.horizontalPadding * 2,
+                            Math.max(
+                                displayMetrics.scaleRpx(300),
+                                displayMetrics.minTouchTarget * 5,
+                            ),
+                        ),
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                    }
+                    : null,
                 animatedStyle,
             ]}
         >
-            <Text style={[styles.tipText, { color: textColor }]}>{content}</Text>
+            <Text
+                style={[
+                    styles.tipText,
+                    displayMetrics.isCarMode
+                        ? {
+                            fontSize: displayMetrics.fontSizes.description,
+                            lineHeight:
+                                displayMetrics.fontSizes.description * 1.35,
+                        }
+                        : null,
+                    { color: textColor },
+                ]}>
+                {content}
+            </Text>
             <View
                 style={[
                     styles.triangle,

@@ -20,6 +20,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 import Icon from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export interface IToastConfig {
     /** 类型 */
@@ -58,6 +59,7 @@ const typeConfig = {
 export function ToastBaseComponent() {
     const activeToast = activeToastStore.useValue();
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
 
     const toastAnim = useSharedValue(0);
 
@@ -115,10 +117,42 @@ export function ToastBaseComponent() {
 
     return activeToast ? (
         <GestureDetector gesture={flingGesture}>
-            <View style={styles.container}>
+            <View
+                style={[
+                    styles.container,
+                    displayMetrics.isCarMode
+                        ? {
+                            top: displayMetrics.appBarHeight +
+                                displayMetrics.horizontalPadding,
+                            height: Math.max(
+                                displayMetrics.scaleRpx(100),
+                                displayMetrics.minTouchTarget,
+                            ),
+                        }
+                        : null,
+                ]}>
                 <Animated.View
                     style={[
                         styles.contentContainer,
+                        displayMetrics.isCarMode
+                            ? {
+                                width: Math.min(
+                                    Math.max(
+                                        displayMetrics.scaleRpx(688),
+                                        displayMetrics.minTouchTarget * 6,
+                                    ),
+                                    displayMetrics.width -
+                                        displayMetrics.horizontalPadding * 2,
+                                ),
+                                minHeight: displayMetrics.minTouchTarget,
+                                height: Math.max(
+                                    displayMetrics.scaleRpx(100),
+                                    displayMetrics.minTouchTarget,
+                                ),
+                                paddingHorizontal:
+                                    displayMetrics.horizontalPadding,
+                            }
+                            : null,
                         {
                             backgroundColor: colors.notification,
                             shadowColor: colors.shadow,
@@ -126,23 +160,60 @@ export function ToastBaseComponent() {
                         toastAnimStyle,
                     ]}>
                     <Icon
-                        size={fontSizeConst.appbar}
+                        size={
+                            displayMetrics.isCarMode
+                                ? displayMetrics.iconSizes.normal
+                                : fontSizeConst.appbar
+                        }
                         name={typeConfig[activeToast.type].name}
                         color={typeConfig[activeToast.type].color}
                     />
                     <Text
                         numberOfLines={2}
-                        style={[styles.text, { color: colors.text }]}>
+                        style={[
+                            styles.text,
+                            displayMetrics.isCarMode
+                                ? {
+                                    fontSize:
+                                        displayMetrics.fontSizes.content,
+                                    marginLeft:
+                                        displayMetrics.horizontalPadding,
+                                }
+                                : null,
+                            { color: colors.text },
+                        ]}>
                         {activeToast.message}
                     </Text>
                     {activeToast.actionText && activeToast.onActionClick ? (
                         <Pressable
                             style={[
                                 styles.actionTextContainer,
+                                displayMetrics.isCarMode
+                                    ? {
+                                        minWidth:
+                                            displayMetrics.minTouchTarget * 2,
+                                        width:
+                                            displayMetrics.minTouchTarget * 2,
+                                        height:
+                                            displayMetrics.minTouchTarget,
+                                        marginLeft:
+                                            displayMetrics.horizontalPadding,
+                                    }
+                                    : null,
                                 { backgroundColor: colors.primary },
                             ]}
                             onPress={activeToast.onActionClick}>
-                            <Text style={styles.actionText} numberOfLines={1}>
+                            <Text
+                                style={[
+                                    styles.actionText,
+                                    displayMetrics.isCarMode
+                                        ? {
+                                            fontSize:
+                                                displayMetrics.fontSizes.content,
+                                        }
+                                        : null,
+                                ]}
+                                numberOfLines={1}>
                                 {activeToast.actionText}
                             </Text>
                         </Pressable>

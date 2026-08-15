@@ -5,6 +5,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 import ThemeText from "@/components/base/themeText";
 import Divider from "@/components/base/divider";
 import i18n from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IPanelHeaderProps {
     title: string;
@@ -27,12 +28,35 @@ export default function PanelHeader(props: IPanelHeaderProps) {
         hideDivider,
         style,
     } = props;
+    const displayMetrics = useDisplayMetrics();
+    const buttonWidth = displayMetrics.isCarMode
+        ? Math.max(
+            displayMetrics.scaleRpx(120),
+            displayMetrics.minTouchTarget * 1.25,
+        )
+        : rpx(120);
 
     return (
         <>
-            <View style={[styles.header, style]}>
+            <View
+                style={[
+                    styles.header,
+                    style,
+                    displayMetrics.isCarMode
+                        ? {
+                            height: Math.max(
+                                displayMetrics.scaleRpx(100),
+                                displayMetrics.minTouchTarget,
+                            ),
+                            paddingHorizontal:
+                                displayMetrics.horizontalPadding,
+                        }
+                        : null,
+                ]}>
                 {hideButtons ? null : (
-                    <TouchableOpacity style={styles.button} onPress={onCancel}>
+                    <TouchableOpacity
+                        style={[styles.button, { width: buttonWidth }]}
+                        onPress={onCancel}>
                         <ThemeText fontWeight="medium">
                             {cancelText || i18n.t("common.cancel")}
                         </ThemeText>
@@ -47,7 +71,11 @@ export default function PanelHeader(props: IPanelHeaderProps) {
                 </ThemeText>
                 {hideButtons ? null : (
                     <TouchableOpacity
-                        style={[styles.button, styles.rightButton]}
+                        style={[
+                            styles.button,
+                            styles.rightButton,
+                            { width: buttonWidth },
+                        ]}
                         onPress={onOk}>
                         <ThemeText fontWeight="medium" fontColor="primary">
                             {okText || i18n.t("common.confirm")}

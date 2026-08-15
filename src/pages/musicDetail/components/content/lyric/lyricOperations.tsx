@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import rpx from "@/utils/rpx";
 import { iconSizeConst } from "@/constants/uiConst";
 import TranslationIcon from "@/assets/icons/translation.svg";
@@ -13,6 +13,7 @@ import useOrientation from "@/hooks/useOrientation";
 import HeartIcon from "../heartIcon";
 import Icon from "@/components/base/icon.tsx";
 import lyricManager, { useLyricState } from "@/core/lyricManager";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface ILyricOperationsProps {
     scrollToCurrentLrcItem: () => void;
@@ -30,14 +31,40 @@ export default function LyricOperations(props: ILyricOperationsProps) {
     );
     const colors = useColors();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const operationSize = displayMetrics.isCarMode
+        ? displayMetrics.iconSizes.normal
+        : iconSizeConst.normal;
+    const operationButtonStyle = displayMetrics.isCarMode
+        ? {
+            minWidth: displayMetrics.minTouchTarget,
+            minHeight: displayMetrics.minTouchTarget,
+            alignItems: "center" as const,
+            justifyContent: "center" as const,
+        }
+        : null;
 
     return (
-        <View style={styles.container}>
-            {orientation === "vertical" ? <HeartIcon /> : null}
-            <Icon
-                name="font-size"
-                size={iconSizeConst.normal}
-                color="white"
+        <View
+            style={[
+                styles.container,
+                displayMetrics.isCarMode
+                    ? {
+                        height: Math.max(
+                            rpx(80),
+                            displayMetrics.minTouchTarget,
+                        ),
+                        marginBottom: displayMetrics.scaleRpx(24),
+                    }
+                    : null,
+            ]}>
+            {orientation === "vertical" ? (
+                <View style={operationButtonStyle}>
+                    <HeartIcon />
+                </View>
+            ) : null}
+            <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     showPanel("SetFontSize", {
                         defaultSelect: detailFontSize ?? 1,
@@ -46,12 +73,11 @@ export default function LyricOperations(props: ILyricOperationsProps) {
                             scrollToCurrentLrcItem();
                         },
                     });
-                }}
-            />
-            <Icon
-                name="arrows-left-right"
-                size={iconSizeConst.normal}
-                color="white"
+                }}>
+                <Icon name="font-size" size={operationSize} color="white" />
+            </Pressable>
+            <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     const currentMusicItem = TrackPlayer.currentMusic;
 
@@ -65,13 +91,16 @@ export default function LyricOperations(props: ILyricOperationsProps) {
                             },
                         });
                     }
-                }}
-            />
+                }}>
+                <Icon
+                    name="arrows-left-right"
+                    size={operationSize}
+                    color="white"
+                />
+            </Pressable>
 
-            <Icon
-                name="magnifying-glass"
-                size={iconSizeConst.normal}
-                color="white"
+            <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     const currentMusic = TrackPlayer.currentMusic;
                     if (!currentMusic) {
@@ -89,16 +118,15 @@ export default function LyricOperations(props: ILyricOperationsProps) {
                         musicItem: currentMusic,
                     });
                     // }
-                }}
-            />
-            <TranslationIcon
-                width={iconSizeConst.normal}
-                height={iconSizeConst.normal}
-                opacity={!hasTranslation ? 0.2 : showTranslation ? 1 : 0.5}
-                color={
-                    showTranslation && hasTranslation ? colors.primary : "white"
-                }
-                // style={}
+                }}>
+                <Icon
+                    name="magnifying-glass"
+                    size={operationSize}
+                    color="white"
+                />
+            </Pressable>
+            <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     if (!hasTranslation) {
                         Toast.warn("当前歌曲无翻译");
@@ -110,12 +138,20 @@ export default function LyricOperations(props: ILyricOperationsProps) {
                         !showTranslation,
                     );
                     scrollToCurrentLrcItem();
-                }}
-            />
-            <Icon
-                name="ellipsis-vertical"
-                size={iconSizeConst.normal}
-                color={"white"}
+                }}>
+                <TranslationIcon
+                    width={operationSize}
+                    height={operationSize}
+                    opacity={!hasTranslation ? 0.2 : showTranslation ? 1 : 0.5}
+                    color={
+                        showTranslation && hasTranslation
+                            ? colors.primary
+                            : "white"
+                    }
+                />
+            </Pressable>
+            <Pressable
+                style={operationButtonStyle}
                 onPress={() => {
                     const currentMusic = TrackPlayer.currentMusic;
                     if (currentMusic) {
@@ -123,8 +159,13 @@ export default function LyricOperations(props: ILyricOperationsProps) {
                             musicItem: currentMusic,
                         });
                     }
-                }}
-            />
+                }}>
+                <Icon
+                    name="ellipsis-vertical"
+                    size={operationSize}
+                    color="white"
+                />
+            </Pressable>
         </View>
     );
 }

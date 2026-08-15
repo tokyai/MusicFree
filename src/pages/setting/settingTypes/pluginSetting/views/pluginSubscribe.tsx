@@ -16,6 +16,7 @@ import IconTextButton from "@/components/base/iconTextButton";
 import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import useOrientation from "@/hooks/useOrientation";
 import { useI18N } from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface ISubscribeItem {
     name: string;
@@ -30,6 +31,10 @@ export default function PluginSubscribe() {
 
     const { t } = useI18N();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.normal ?? ITEM_HEIGHT
+        : ITEM_HEIGHT;
 
     useEffect(() => {
         try {
@@ -142,8 +147,8 @@ export default function PluginSubscribe() {
                     );
                 }}
                 getItemLayout={(_, index) => ({
-                    length: ITEM_HEIGHT,
-                    offset: ITEM_HEIGHT * index,
+                    length: itemHeight,
+                    offset: itemHeight * index,
                     index,
                 })}
             />

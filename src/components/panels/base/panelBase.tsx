@@ -22,6 +22,8 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { panelInfoStore } from "../usePanel";
 import NativeUtils from "@/native/utils";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { getDisplayOverlayWidth } from "@/utils/displayMetrics";
 
 const ANIMATION_EASING: EasingFunction = Easing.out(Easing.exp);
 const ANIMATION_DURATION = 250;
@@ -53,9 +55,18 @@ export default function (props: IPanelBaseProps) {
     const timerRef = useRef<any>();
     const safeAreaInsets = useSafeAreaInsets();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const availableWidth = Math.max(
+        1,
+        displayMetrics.width - safeAreaInsets.left - safeAreaInsets.right,
+    );
+    const landscapePanelWidth = displayMetrics.isCarMode
+        ? getDisplayOverlayWidth("panel", availableWidth)
+        : rpx(750);
     const useAnimatedBase = useMemo(
-        () => (orientation === "horizontal" ? rpx(750) : height),
-        [orientation],
+        () =>
+            orientation === "horizontal" ? landscapePanelWidth : height,
+        [height, landscapePanelWidth, orientation],
     );
 
     const backHandlerRef = useRef<NativeEventSubscription>();
@@ -124,7 +135,7 @@ export default function (props: IPanelBaseProps) {
                     },
             ],
         };
-    }, [orientation]);
+    }, [orientation, useAnimatedBase]);
 
     const mountPanel = useCallback(() => {
         setLoading(false);
@@ -164,6 +175,7 @@ export default function (props: IPanelBaseProps) {
                     ? [
                         style.landscapeWrapper,
                         {
+                            width: landscapePanelWidth,
                             height:
                                   vh(100) -
                                   safeAreaInsets.top -

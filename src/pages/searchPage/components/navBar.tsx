@@ -20,6 +20,7 @@ import {
     queryAtom,
     searchResultsAtom,
 } from "../store/atoms";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function NavBar() {
     const search = useSearch();
@@ -28,6 +29,7 @@ export default function NavBar() {
     const colors = useColors();
     const setSearchResultsState = useSetAtom(searchResultsAtom);
     const { t } = useI18N();
+    const displayMetrics = useDisplayMetrics();
 
     const onSearchSubmit = async () => {
         if (query === "") {
@@ -49,7 +51,11 @@ export default function NavBar() {
                 <Icon
                     name="magnifying-glass"
                     color={hintTextColor}
-                    size={iconSizeConst.small}
+                    size={
+                        displayMetrics.isCarMode
+                            ? displayMetrics.iconSizes.small
+                            : iconSizeConst.small
+                    }
                     style={style.magnify}
                 />
                 <Input
@@ -60,6 +66,16 @@ export default function NavBar() {
                             color: colors.text,
                             backgroundColor: colors.pageBackground,
                         },
+                        displayMetrics.isCarMode
+                            ? {
+                                height: displayMetrics.minTouchTarget,
+                                maxHeight: displayMetrics.minTouchTarget,
+                                borderRadius:
+                                    displayMetrics.minTouchTarget / 2,
+                                paddingHorizontal:
+                                    displayMetrics.minTouchTarget,
+                            }
+                            : null,
                     ]}
                     accessible
                     accessibilityLabel={t("searchPage.searchLabel.a11y")}

@@ -31,6 +31,8 @@ export interface IAppConfigProperties {
     "basic.showExitOnNotification": boolean;
     "basic.musicOrderInLocalSheet": SortType;
     "basic.tryChangeSourceWhenPlayFail": boolean;
+    "basic.carDisplayMode": boolean;
+    "basic.carDisplayFontSize": "medium" | "large";
 
     // Lyric
     "lyric.showStatusBarLyric": boolean;

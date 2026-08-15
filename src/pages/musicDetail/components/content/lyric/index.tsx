@@ -19,6 +19,7 @@ import { IconButtonWithGesture } from "@/components/base/iconButton.tsx";
 import { getMediaExtraProperty } from "@/utils/mediaExtra";
 import lyricManager, { useCurrentLyricItem, useLyricState } from "@/core/lyricManager";
 import { useI18N } from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(92);
 
@@ -49,12 +50,22 @@ export default function Lyric(props: IProps) {
         false,
     );
     const fontSizeKey = PersistStatus.useValue("lyric.detailFontSize", 1);
+    const displayMetrics = useDisplayMetrics();
+    const selectedLyricFontSize = displayMetrics.isCarMode
+        ? displayMetrics.lyricFontSizes[fontSizeKey ?? 1]
+        : fontSizeMap[fontSizeKey!];
     const fontSizeStyle = useMemo(
         () => ({
-            fontSize: fontSizeMap[fontSizeKey!],
+            fontSize: selectedLyricFontSize ?? fontSizeMap[1],
         }),
-        [fontSizeKey],
+        [selectedLyricFontSize],
     );
+    const lyricItemHeight = displayMetrics.isCarMode
+        ? Math.max(
+            ITEM_HEIGHT,
+            fontSizeStyle.fontSize + displayMetrics.scaleRpx(48),
+        )
+        : ITEM_HEIGHT;
 
     const [draggingIndex, setDraggingIndex, setDraggingIndexImmi] =
         useDelayFalsy<number | undefined>(undefined, 2000);
@@ -352,10 +363,17 @@ export default function Lyric(props: IProps) {
                         <View
                             style={[
                                 styles.draggingTime,
+                                displayMetrics.isCarMode
+                                    ? {
+                                        height: lyricItemHeight,
+                                        minHeight:
+                                            displayMetrics.minTouchTarget,
+                                    }
+                                    : null,
                                 layout?.height
                                     ? {
                                         top:
-                                            (layout.height - ITEM_HEIGHT) / 2,
+                                            (layout.height - lyricItemHeight) / 2,
                                     }
                                     : null,
                             ]}>

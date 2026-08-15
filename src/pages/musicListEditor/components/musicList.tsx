@@ -15,6 +15,7 @@ import CheckBox from "@/components/base/checkbox";
 import useColors from "@/hooks/useColors";
 import Empty from "@/components/base/empty";
 import useOrientation from "@/hooks/useOrientation";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(120);
 
@@ -69,6 +70,13 @@ export default function MusicList() {
         useAtom(editingMusicListAtom);
     const setMusicListChanged = useSetAtom(musicListChangedAtom);
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.big ?? ITEM_HEIGHT
+        : ITEM_HEIGHT;
+    const resolvedMarginTop = displayMetrics.isCarMode
+        ? displayMetrics.appBarHeight * 2 + (StatusBar.currentHeight ?? 0)
+        : marginTop;
 
     const renderItem = useCallback(
         ({ index, item }: any) => {
@@ -88,10 +96,10 @@ export default function MusicList() {
     return editingMusicList?.length ? (
         <SortableFlatList
             activeBackgroundColor={colors.placeholder}
-            marginTop={orientation === "horizontal" ? 0 : marginTop}
+            marginTop={orientation === "horizontal" ? 0 : resolvedMarginTop}
             data={editingMusicList}
             renderItem={renderItem}
-            itemHeight={ITEM_HEIGHT}
+            itemHeight={itemHeight}
             onSortEnd={newData => {
                 setEditingMusicList(newData);
                 setMusicListChanged(true);

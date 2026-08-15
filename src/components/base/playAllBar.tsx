@@ -13,6 +13,7 @@ import Icon from "@/components/base/icon.tsx";
 import MusicSheet, { useSheetIsStarred } from "@/core/musicSheet";
 import { MusicRepeatMode } from "@/constants/repeatModeConst";
 import { useI18N } from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IProps {
     musicList: IMusic.IMusicItem[] | null;
@@ -26,15 +27,33 @@ export default function (props: IProps) {
     const sheetId = musicSheet?.id;
 
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     const navigate = useNavigate();
     const { t } = useI18N();
 
     const starred = useSheetIsStarred(musicSheet);
 
     return (
-        <View style={style.topWrapper}>
+        <View
+            style={[
+                style.topWrapper,
+                displayMetrics.isCarMode
+                    ? {
+                        height: Math.max(
+                            displayMetrics.scaleRpx(84),
+                            displayMetrics.minTouchTarget,
+                        ),
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                    }
+                    : null,
+            ]}>
             <Pressable
-                style={style.playAll}
+                style={[
+                    style.playAll,
+                    displayMetrics.isCarMode
+                        ? { minHeight: displayMetrics.minTouchTarget }
+                        : null,
+                ]}
                 onPress={() => {
                     if (musicList) {
                         let defaultPlayMusic = musicList[0];
@@ -56,7 +75,11 @@ export default function (props: IProps) {
                 <Icon
                     name="play-circle"
                     style={style.playAllIcon}
-                    size={iconSizeConst.normal}
+                    size={
+                        displayMetrics.isCarMode
+                            ? displayMetrics.iconSizes.normal
+                            : iconSizeConst.normal
+                    }
                     color={colors.text}
                 />
                 <ThemeText fontWeight="bold">{t("playAllBar.title")}</ThemeText>
@@ -66,7 +89,12 @@ export default function (props: IProps) {
                     name={starred ? "heart" : "heart-outline"}
                     sizeType={"normal"}
                     color={starred ? "#e31639" : undefined}
-                    style={style.optionButton}
+                    style={[
+                        style.optionButton,
+                        displayMetrics.isCarMode
+                            ? { marginLeft: displayMetrics.horizontalPadding }
+                            : null,
+                    ]}
                     onPress={async () => {
                         if (!starred) {
                             MusicSheet.starMusicSheet(musicSheet);
@@ -81,7 +109,12 @@ export default function (props: IProps) {
             <IconButton
                 name="folder-plus"
                 sizeType={"normal"}
-                style={style.optionButton}
+                style={[
+                    style.optionButton,
+                    displayMetrics.isCarMode
+                        ? { marginLeft: displayMetrics.horizontalPadding }
+                        : null,
+                ]}
                 onPress={async () => {
                     showPanel("AddToMusicSheet", {
                         musicItem: musicList ?? [],
@@ -92,7 +125,12 @@ export default function (props: IProps) {
             <IconButton
                 name="pencil-square"
                 sizeType={"normal"}
-                style={style.optionButton}
+                style={[
+                    style.optionButton,
+                    displayMetrics.isCarMode
+                        ? { marginLeft: displayMetrics.horizontalPadding }
+                        : null,
+                ]}
                 onPress={async () => {
                     navigate(ROUTE_PATH.MUSIC_LIST_EDITOR, {
                         musicList: musicList,

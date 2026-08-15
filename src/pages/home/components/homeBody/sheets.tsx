@@ -16,11 +16,16 @@ import { FlashList } from "@shopify/flash-list";
 import React, { useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function Sheets() {
     const [index, setIndex] = useState(0);
     const colors = useColors();
     const navigate = useNavigate();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.big ?? ListItem.Size.big
+        : ListItem.Size.big;
 
     const allSheets = useSheetsBase();
     const staredSheets = useStarredSheets();
@@ -117,7 +122,7 @@ export default function Sheets() {
                 ListEmptyComponent={<Empty />}
                 extraData={{ t }}
                 data={(index === 0 ? allSheets : staredSheets) ?? []}
-                estimatedItemSize={ListItem.Size.big}
+                estimatedItemSize={itemHeight}
                 renderItem={({ item: sheet }) => {
                     const isLocalSheet = !(
                         sheet.platform && sheet.platform !== localPluginPlatform

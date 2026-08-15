@@ -25,6 +25,7 @@ import {
 } from "react-native-fs";
 import { FlatList } from "react-native-gesture-handler";
 import FileItem from "./fileItem";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IPathItem {
     path: string;
@@ -62,6 +63,10 @@ export default function FileSelector() {
     const navigation = useNavigation();
     const colors = useColors();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? Math.max(ITEM_HEIGHT, displayMetrics.minTouchTarget)
+        : ITEM_HEIGHT;
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -211,7 +216,11 @@ export default function FileSelector() {
 
     const renderHeader = () => {
         return multi ? (
-            <View style={style.selectAll}>
+            <View
+                style={[
+                    style.selectAll,
+                    displayMetrics.isCarMode ? { height: itemHeight } : null,
+                ]}>
                 <Button
                     onPress={() => {
                         if (currentPageAllChecked) {
@@ -236,10 +245,23 @@ export default function FileSelector() {
     };
 
     const actionButton = (
-        <Pressable onPress={submitSelection} style={style.actionButton}>
+        <Pressable
+            onPress={submitSelection}
+            style={[
+                style.actionButton,
+                displayMetrics.isCarMode
+                    ? { minHeight: displayMetrics.minTouchTarget }
+                    : null,
+            ]}>
             <View
                 style={[
                     style.scanBtn,
+                    displayMetrics.isCarMode
+                        ? {
+                            height: displayMetrics.minTouchTarget,
+                            minHeight: displayMetrics.minTouchTarget,
+                        }
+                        : null,
                     {
                         backgroundColor: colors.appBar,
                     },
@@ -269,8 +291,8 @@ export default function FileSelector() {
             style={globalStyle.fwflex1}
             data={filesData}
             getItemLayout={(_, index) => ({
-                length: ITEM_HEIGHT,
-                offset: ITEM_HEIGHT * index,
+                length: itemHeight,
+                offset: itemHeight * index,
                 index,
             })}
             renderItem={renderItem}
@@ -287,7 +309,18 @@ export default function FileSelector() {
     );
 
     const header = (
-        <View style={[style.header, { backgroundColor: colors.appBar }]}>
+        <View
+            style={[
+                style.header,
+                displayMetrics.isCarMode
+                    ? {
+                        height: displayMetrics.appBarHeight,
+                        minHeight: displayMetrics.minTouchTarget,
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                    }
+                    : null,
+                { backgroundColor: colors.appBar },
+            ]}>
             <IconButton
                 sizeType="small"
                 name="arrow-long-left"

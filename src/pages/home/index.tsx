@@ -5,7 +5,10 @@ import NavBar from "./components/navBar";
 import MusicBar from "@/components/musicBar";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import HomeDrawer from "./components/drawer";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+    SafeAreaView,
+    useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import StatusBar from "@/components/base/statusBar";
 import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView.tsx";
 import globalStyle from "@/constants/globalStyle";
@@ -14,6 +17,8 @@ import HomeBody from "./components/homeBody";
 import HomeBodyHorizontal from "./components/homeBodyHorizontal";
 import useOrientation from "@/hooks/useOrientation";
 import rpx from "@/utils/rpx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { getDisplayOverlayWidth } from "@/utils/displayMetrics";
 
 function Home() {
     const orientation = useOrientation();
@@ -63,14 +68,24 @@ function HomeStatusBar() {
 const LeftDrawer = createDrawerNavigator();
 export default function App() {
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const safeAreaInsets = useSafeAreaInsets();
+    const availableWidth = Math.max(
+        1,
+        displayMetrics.width - safeAreaInsets.left - safeAreaInsets.right,
+    );
+    const drawerWidth = displayMetrics.isCarMode
+        ? getDisplayOverlayWidth("drawer", availableWidth)
+        : orientation === "horizontal"
+            ? rpx(620)
+            : "80%";
 
     return (
         <LeftDrawer.Navigator
             screenOptions={{
                 headerShown: false,
                 drawerStyle: {
-                    width:
-                        orientation === "horizontal" ? rpx(620) : "80%",
+                    width: drawerWidth,
                 },
             }}
             initialRouteName="HOME-MAIN"

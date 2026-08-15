@@ -20,6 +20,7 @@ import {
 import FastImage from "./fastImage";
 import { ImageStyle } from "react-native-fast-image";
 import Icon, { IIconName } from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IListItemProps {
     // 是否有左右边距
@@ -60,10 +61,27 @@ function ListItem(props: IListItemProps) {
         onLongPress,
     } = props;
 
+    const displayMetrics = useDisplayMetrics();
+    const resolvedPadding = displayMetrics.isCarMode
+        ? displayMetrics.horizontalPadding
+        : defaultPadding;
+    const resolvedHeight =
+        displayMetrics.isCarMode && heightType !== "none"
+            ? displayMetrics.listItemHeights[heightType]
+            : Size[heightType];
+
     const defaultStyle: StyleProp<ViewStyle> = {
-        paddingLeft: withHorizontalPadding ? leftPadding : 0,
-        paddingRight: withHorizontalPadding ? rightPadding : 0,
-        height: Size[heightType],
+        paddingLeft: withHorizontalPadding
+            ? leftPadding === defaultPadding
+                ? resolvedPadding
+                : leftPadding
+            : 0,
+        paddingRight: withHorizontalPadding
+            ? rightPadding === defaultPadding
+                ? resolvedPadding
+                : rightPadding
+            : 0,
+        height: resolvedHeight,
     };
 
     const colors = useColors();
@@ -74,7 +92,15 @@ function ListItem(props: IListItemProps) {
             underlayColor={colors.listActive}
             onPress={onPress}
             onLongPress={onLongPress}>
-            <View style={[styles.container, defaultStyle, style]}>
+            <View
+                style={[
+                    styles.container,
+                    defaultStyle,
+                    style,
+                    displayMetrics.isCarMode
+                        ? { minHeight: displayMetrics.minTouchTarget }
+                        : null,
+                ]}>
                 {children}
             </View>
         </TouchableHighlight>
@@ -108,11 +134,19 @@ function ListItemText(props: IListItemTextProps) {
         contentProps = {},
     } = props;
 
+    const displayMetrics = useDisplayMetrics();
+    const resolvedPadding = displayMetrics.isCarMode
+        ? displayMetrics.horizontalPadding
+        : defaultPadding;
+    const resolvedActionWidth = displayMetrics.isCarMode
+        ? displayMetrics.actionWidth
+        : defaultActionWidth;
+
     const defaultStyle: StyleProp<ViewStyle> = {
-        marginRight: position === "left" ? defaultPadding : 0,
-        marginLeft: position === "right" ? defaultPadding : 0,
-        width: fixedWidth ? width ?? defaultActionWidth : undefined,
-        flexBasis: fixedWidth ? width ?? defaultActionWidth : undefined,
+        marginRight: position === "left" ? resolvedPadding : 0,
+        marginLeft: position === "right" ? resolvedPadding : 0,
+        width: fixedWidth ? width ?? resolvedActionWidth : undefined,
+        flexBasis: fixedWidth ? width ?? resolvedActionWidth : undefined,
     };
 
     return (
@@ -144,7 +178,7 @@ interface IListItemIconProps {
 function ListItemIcon(props: IListItemIconProps) {
     const {
         icon,
-        iconSize = iconSizeConst.normal,
+        iconSize,
         position = "left",
         fixedWidth,
         width,
@@ -155,19 +189,47 @@ function ListItemIcon(props: IListItemIconProps) {
     } = props;
 
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
+    const resolvedPadding = displayMetrics.isCarMode
+        ? displayMetrics.horizontalPadding
+        : defaultPadding;
+    const resolvedActionWidth = displayMetrics.isCarMode
+        ? displayMetrics.actionWidth
+        : defaultActionWidth;
+    const legacyIconSize = iconSize ?? iconSizeConst.normal;
+    const resolvedIconSize = displayMetrics.isCarMode
+        ? Math.max(
+            legacyIconSize,
+            iconSize === undefined
+                ? displayMetrics.iconSizes.normal
+                : displayMetrics.iconSizes.small,
+        )
+        : legacyIconSize;
+    const interactiveWidth =
+        displayMetrics.isCarMode && onPress
+            ? Math.max(width ?? 0, displayMetrics.minTouchTarget)
+            : width;
 
     const defaultStyle: StyleProp<ViewStyle> = {
-        marginRight: position === "left" ? defaultPadding : 0,
-        marginLeft: position === "right" ? defaultPadding : 0,
-        width: fixedWidth ? width ?? defaultActionWidth : undefined,
-        flexBasis: fixedWidth ? width ?? defaultActionWidth : undefined,
+        marginRight: position === "left" ? resolvedPadding : 0,
+        marginLeft: position === "right" ? resolvedPadding : 0,
+        width: fixedWidth
+            ? interactiveWidth ?? resolvedActionWidth
+            : undefined,
+        flexBasis: fixedWidth
+            ? interactiveWidth ?? resolvedActionWidth
+            : undefined,
+        minWidth:
+            displayMetrics.isCarMode && onPress
+                ? displayMetrics.minTouchTarget
+                : undefined,
     };
 
     const innerContent = (
         <View style={[styles.actionBase, defaultStyle, containerStyle]}>
             <Icon
                 name={icon}
-                size={iconSize}
+                size={resolvedIconSize}
                 style={contentStyle}
                 color={color || colors.text}
             />
@@ -175,7 +237,20 @@ function ListItemIcon(props: IListItemIconProps) {
     );
 
     return onPress ? (
-        <TouchableOpacity onPress={onPress}>{innerContent}</TouchableOpacity>
+        <TouchableOpacity
+            style={
+                displayMetrics.isCarMode
+                    ? {
+                        minWidth: displayMetrics.minTouchTarget,
+                        height: "100%",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }
+                    : null
+            }
+            onPress={onPress}>
+            {innerContent}
+        </TouchableOpacity>
     ) : (
         innerContent
     );
@@ -197,6 +272,7 @@ function ListItemImage(props: IListItemImageProps) {
     const {
         uri,
         fallbackImg,
+        imageSize,
         position = "left",
         fixedWidth,
         width,
@@ -205,25 +281,62 @@ function ListItemImage(props: IListItemImageProps) {
         maskIcon,
     } = props;
 
+    const displayMetrics = useDisplayMetrics();
+    const resolvedPadding = displayMetrics.isCarMode
+        ? displayMetrics.horizontalPadding
+        : defaultPadding;
+    const resolvedActionWidth = displayMetrics.isCarMode
+        ? displayMetrics.actionWidth
+        : defaultActionWidth;
+    const legacyImageSize = imageSize ?? rpx(80);
+    const resolvedImageSize = displayMetrics.isCarMode
+        ? Math.max(legacyImageSize, displayMetrics.listImageSize)
+        : legacyImageSize;
+
     const defaultStyle: StyleProp<ViewStyle> = {
-        marginRight: position === "left" ? defaultPadding : 0,
-        marginLeft: position === "right" ? defaultPadding : 0,
-        width: fixedWidth ? width ?? defaultActionWidth : undefined,
-        flexBasis: fixedWidth ? width ?? defaultActionWidth : undefined,
+        marginRight: position === "left" ? resolvedPadding : 0,
+        marginLeft: position === "right" ? resolvedPadding : 0,
+        width: fixedWidth ? width ?? resolvedActionWidth : undefined,
+        flexBasis: fixedWidth ? width ?? resolvedActionWidth : undefined,
     };
 
     return (
         <View style={[styles.actionBase, defaultStyle, containerStyle]}>
             <FastImage
-                style={[styles.leftImage, contentStyle]}
+                style={[
+                    styles.leftImage,
+                    displayMetrics.isCarMode
+                        ? {
+                            width: resolvedImageSize,
+                            height: resolvedImageSize,
+                            borderRadius: resolvedImageSize / 5,
+                        }
+                        : null,
+                    contentStyle,
+                ]}
                 source={uri}
                 placeholderSource={fallbackImg}
             />
             {maskIcon ? (
-                <View style={[styles.leftImage, styles.imageMask]}>
+                <View
+                    style={[
+                        styles.leftImage,
+                        styles.imageMask,
+                        displayMetrics.isCarMode
+                            ? {
+                                width: resolvedImageSize,
+                                height: resolvedImageSize,
+                                borderRadius: resolvedImageSize / 5,
+                            }
+                            : null,
+                    ]}>
                     <Icon
                         name={maskIcon}
-                        size={iconSizeConst.normal}
+                        size={
+                            displayMetrics.isCarMode
+                                ? displayMetrics.iconSizes.normal
+                                : iconSizeConst.normal
+                        }
                         color="red"
                     />
                 </View>

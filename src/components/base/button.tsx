@@ -9,6 +9,7 @@ import useColors from "@/hooks/useColors.ts";
 import ThemeText from "@/components/base/themeText.tsx";
 import React from "react";
 import rpx from "@/utils/rpx.ts";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export function Button(props: {
     type?: "normal" | "primary";
@@ -18,6 +19,7 @@ export function Button(props: {
 }) {
     const { type = "normal", text, style, onPress } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
 
     return (
         <TouchableOpacity
@@ -25,6 +27,12 @@ export function Button(props: {
             onPress={onPress}
             style={[
                 styles.bottomBtn,
+                displayMetrics.isCarMode
+                    ? {
+                        height: displayMetrics.buttonHeight,
+                        borderRadius: displayMetrics.scaleRpx(8),
+                    }
+                    : null,
                 {
                     backgroundColor:
                         type === "normal" ? colors.placeholder : colors.primary,

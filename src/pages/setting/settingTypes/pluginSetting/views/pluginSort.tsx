@@ -13,6 +13,7 @@ import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import useOrientation from "@/hooks/useOrientation";
 import React, { useState } from "react";
 import { StatusBar, StyleSheet, TouchableOpacity, View } from "react-native";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(96);
 const marginTop = rpx(188) + (StatusBar.currentHeight ?? 0);
@@ -24,10 +25,29 @@ export default function PluginSort() {
     const colors = useColors();
     const { t } = useI18N();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? Math.max(ITEM_HEIGHT, displayMetrics.minTouchTarget)
+        : ITEM_HEIGHT;
+    const resolvedMarginTop = displayMetrics.isCarMode
+        ? displayMetrics.appBarHeight * 2 + (StatusBar.currentHeight ?? 0)
+        : marginTop;
 
     function renderSortingItem({ item }: { item: Plugin }) {
         return (
-            <View style={style.sortItem}>
+            <View
+                style={[
+                    style.sortItem,
+                    displayMetrics.isCarMode
+                        ? {
+                            height: itemHeight,
+                            minHeight: displayMetrics.minTouchTarget,
+                            width: "100%",
+                            paddingHorizontal:
+                                displayMetrics.horizontalPadding,
+                        }
+                        : null,
+                ]}>
                 <ThemeText>{item.name}</ThemeText>
             </View>
         );
@@ -42,9 +62,9 @@ export default function PluginSort() {
         <SortableFlatList
             data={sortingPlugins}
             activeBackgroundColor={colors.placeholder}
-            marginTop={orientation === "horizontal" ? 0 : marginTop}
+            marginTop={orientation === "horizontal" ? 0 : resolvedMarginTop}
             renderItem={renderSortingItem}
-            itemHeight={ITEM_HEIGHT}
+            itemHeight={itemHeight}
             itemJustifyContent={"space-between"}
             onSortEnd={data => {
                 setSortingPlugins(data);

@@ -18,6 +18,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { timingConfig } from "@/constants/commonConst";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IBarMusicItemProps {
     musicItem: IMusic.IMusicItem | null;
@@ -28,6 +29,10 @@ function _BarMusicItem(props: IBarMusicItemProps) {
     const { musicItem, activeIndex, transformSharedValue } = props;
     const colors = useColors();
     const safeAreaInsets = useSafeAreaInsets();
+    const displayMetrics = useDisplayMetrics();
+    const artworkSize = displayMetrics.isCarMode
+        ? Math.max(displayMetrics.scaleRpx(96), displayMetrics.listImageSize)
+        : rpx(96);
 
     const animatedStyles = useAnimatedStyle(() => {
         return {
@@ -44,12 +49,25 @@ function _BarMusicItem(props: IBarMusicItemProps) {
             style={[
                 styles.container,
                 {
-                    paddingLeft: rpx(24) + safeAreaInsets.left,
+                    paddingLeft:
+                        (displayMetrics.isCarMode
+                            ? displayMetrics.horizontalPadding
+                            : rpx(24)) + safeAreaInsets.left,
                 },
                 animatedStyles,
             ]}>
             <FastImage
-                style={styles.artworkImg}
+                style={[
+                    styles.artworkImg,
+                    displayMetrics.isCarMode
+                        ? {
+                            width: artworkSize,
+                            height: artworkSize,
+                            borderRadius: artworkSize / 2,
+                            marginRight: displayMetrics.horizontalPadding,
+                        }
+                        : null,
+                ]}
                 source={musicItem.artwork}
                 placeholderSource={ImgAsset.albumDefault}
             />

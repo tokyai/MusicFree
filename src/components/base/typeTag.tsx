@@ -10,6 +10,7 @@ import {
 import rpx from "@/utils/rpx";
 import ThemeText from "@/components/base/themeText";
 import useColors from "@/hooks/useColors";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface ITypeTagProps {
     title: string;
@@ -28,11 +29,19 @@ export default function TypeTag(props: ITypeTagProps) {
         style: _style,
     } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     return (
         <TouchableOpacity onPress={onPress}>
             <View
                 style={[
                     style.wrapper,
+                    displayMetrics.isCarMode
+                        ? {
+                            minHeight: displayMetrics.minTouchTarget,
+                            paddingHorizontal: displayMetrics.horizontalPadding,
+                            paddingVertical: displayMetrics.scaleRpx(12),
+                        }
+                        : null,
                     {
                         backgroundColor: colors.card,
                         borderColor: colors.divider,

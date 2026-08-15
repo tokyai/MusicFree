@@ -1,7 +1,12 @@
 import repeatModeConst from "@/constants/repeatModeConst";
 import rpx from "@/utils/rpx";
 import React from "react";
-import { InteractionManager, StyleSheet, View } from "react-native";
+import {
+    InteractionManager,
+    Pressable,
+    StyleSheet,
+    View,
+} from "react-native";
 
 import Icon from "@/components/base/icon.tsx";
 import { showPanel } from "@/components/panels/usePanel";
@@ -9,14 +14,31 @@ import TrackPlayer, { useMusicState, useRepeatMode } from "@/core/trackPlayer";
 import useOrientation from "@/hooks/useOrientation";
 import delay from "@/utils/delay";
 import { musicIsPaused } from "@/utils/trackUtils";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function () {
     const repeatMode = useRepeatMode();
     const musicState = useMusicState();
 
     const orientation = useOrientation();
-
-    console.log(repeatMode, repeatModeConst[repeatMode]);
+    const displayMetrics = useDisplayMetrics();
+    const sideIconSize = displayMetrics.isCarMode
+        ? Math.max(displayMetrics.scaleRpx(56), displayMetrics.iconSizes.big)
+        : rpx(56);
+    const primaryIconSize = displayMetrics.isCarMode
+        ? Math.max(
+            displayMetrics.scaleRpx(96),
+            displayMetrics.iconSizes.large,
+        )
+        : rpx(96);
+    const buttonStyle = displayMetrics.isCarMode
+        ? {
+            minWidth: displayMetrics.minTouchTarget,
+            minHeight: displayMetrics.minTouchTarget,
+            alignItems: "center" as const,
+            justifyContent: "center" as const,
+        }
+        : null;
 
     return (
         <>
@@ -28,54 +50,77 @@ export default function () {
                             marginTop: 0,
                         }
                         : null,
+                    displayMetrics.isCarMode
+                        ? {
+                            height: Math.max(
+                                rpx(100),
+                                displayMetrics.minTouchTarget,
+                            ),
+                        }
+                        : null,
                 ]}>
-                <Icon
-                    color={"white"}
-                    name={repeatModeConst[repeatMode].icon}
-                    size={rpx(56)}
+                <Pressable
+                    style={buttonStyle}
                     onPress={async () => {
                         InteractionManager.runAfterInteractions(async () => {
                             await delay(20, false);
                             TrackPlayer.toggleRepeatMode();
                         });
-                    }}
-                />
-                <Icon
-                    color={"white"}
-                    name={"skip-left"}
-                    size={rpx(56)}
+                    }}>
+                    <Icon
+                        color="white"
+                        name={repeatModeConst[repeatMode].icon}
+                        size={sideIconSize}
+                    />
+                </Pressable>
+                <Pressable
+                    style={buttonStyle}
                     onPress={() => {
                         TrackPlayer.skipToPrevious();
-                    }}
-                />
-                <Icon
-                    color={"white"}
-                    name={musicIsPaused(musicState) ? "play" : "pause"}
-                    size={rpx(96)}
+                    }}>
+                    <Icon
+                        color="white"
+                        name="skip-left"
+                        size={sideIconSize}
+                    />
+                </Pressable>
+                <Pressable
+                    style={buttonStyle}
                     onPress={() => {
                         if (musicIsPaused(musicState)) {
                             TrackPlayer.play();
                         } else {
                             TrackPlayer.pause();
                         }
-                    }}
-                />
-                <Icon
-                    color={"white"}
-                    name={"skip-right"}
-                    size={rpx(56)}
+                    }}>
+                    <Icon
+                        color="white"
+                        name={musicIsPaused(musicState) ? "play" : "pause"}
+                        size={primaryIconSize}
+                    />
+                </Pressable>
+                <Pressable
+                    style={buttonStyle}
                     onPress={() => {
                         TrackPlayer.skipToNext();
-                    }}
-                />
-                <Icon
-                    color={"white"}
-                    name={"playlist"}
-                    size={rpx(56)}
+                    }}>
+                    <Icon
+                        color="white"
+                        name="skip-right"
+                        size={sideIconSize}
+                    />
+                </Pressable>
+                <Pressable
+                    style={buttonStyle}
                     onPress={() => {
                         showPanel("PlayList");
-                    }}
-                />
+                    }}>
+                    <Icon
+                        color="white"
+                        name="playlist"
+                        size={sideIconSize}
+                    />
+                </Pressable>
             </View>
         </>
     );

@@ -10,6 +10,7 @@ import React, { memo, useCallback, useEffect, useState } from "react";
 import useSearch from "../../hooks/useSearch";
 import { ISearchResult, queryAtom } from "../../store/atoms";
 import { renderMap } from "./results";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IResultWrapperProps<
     T extends ICommon.SupportMediaType = ICommon.SupportMediaType,
@@ -28,6 +29,10 @@ function ResultWrapper(props: IResultWrapperProps) {
     );
     const query = useAtomValue(queryAtom);
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const musicEstimate = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.big ?? rpx(120)
+        : rpx(120);
 
     const ResultComponent = renderMap[tab]!;
     const data: any = searchResult?.data ?? [];
@@ -79,7 +84,9 @@ function ResultWrapper(props: IResultWrapperProps) {
                     searchState === RequestStateCode.IDLE) &&
                     search(undefined, undefined, tab, pluginHash);
             }}
-            estimatedItemSize={tab === "sheet" ? rpx(306) : rpx(120)}
+            estimatedItemSize={
+                tab === "sheet" ? rpx(306) : musicEstimate
+            }
             numColumns={tab === "sheet" ? 3 : 1}
             renderItem={renderItem}
             keyExtractor={keyExtractor}

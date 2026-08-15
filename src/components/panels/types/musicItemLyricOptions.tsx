@@ -23,6 +23,7 @@ import { FlatList } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PanelBase from "../base/panelBase";
 import { useI18N } from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IMusicItemLyricOptionsProps {
     /** 歌曲信息 */
@@ -44,6 +45,10 @@ export default function MusicItemLyricOptions(
     const { musicItem } = props ?? {};
 
     const safeAreaInsets = useSafeAreaInsets();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.small ?? ITEM_HEIGHT
+        : ITEM_HEIGHT;
     const { t } = useI18N();
 
     const options: IOption[] = [
@@ -200,7 +205,13 @@ export default function MusicItemLyricOptions(
         <PanelBase
             renderBody={() => (
                 <>
-                    <View style={style.header}>
+                    <View
+                        style={[
+                            style.header,
+                            displayMetrics.isCarMode
+                                ? { width: "100%" }
+                                : null,
+                        ]}>
                         <FastImage
                             style={style.artwork}
                             source={musicItem?.artwork}
@@ -220,12 +231,18 @@ export default function MusicItemLyricOptions(
                         </View>
                     </View>
                     <Divider />
-                    <View style={style.wrapper}>
+                    <View
+                        style={[
+                            style.wrapper,
+                            displayMetrics.isCarMode
+                                ? { width: "100%" }
+                                : null,
+                        ]}>
                         <FlatList
                             data={options}
                             getItemLayout={(_, index) => ({
-                                length: ITEM_HEIGHT,
-                                offset: ITEM_HEIGHT * index,
+                                length: itemHeight,
+                                offset: itemHeight * index,
                                 index,
                             })}
                             ListFooterComponent={<View style={style.footer} />}

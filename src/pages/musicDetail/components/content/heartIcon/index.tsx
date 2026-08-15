@@ -1,7 +1,6 @@
 import React from "react";
-import { iconSizeConst } from "@/constants/uiConst";
 import { useCurrentMusic } from "@/core/trackPlayer";
-import Icon from "@/components/base/icon.tsx";
+import IconButton from "@/components/base/iconButton";
 import MusicSheet, { useFavorite } from "@/core/musicSheet";
 
 export default function () {
@@ -10,9 +9,9 @@ export default function () {
     const isFavorite = useFavorite(musicItem);
 
     return isFavorite ? (
-        <Icon
+        <IconButton
             name="heart"
-            size={iconSizeConst.normal}
+            sizeType="normal"
             color="red"
             onPress={() => {
                 if (!musicItem) {
@@ -22,9 +21,9 @@ export default function () {
             }}
         />
     ) : (
-        <Icon
+        <IconButton
             name="heart-outline"
-            size={iconSizeConst.normal}
+            sizeType="normal"
             color="white"
             onPress={() => {
                 if (musicItem) {

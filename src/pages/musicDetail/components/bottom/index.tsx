@@ -4,18 +4,26 @@ import rpx from "@/utils/rpx";
 import SeekBar from "./seekBar";
 import PlayControl from "./playControl";
 import useOrientation from "@/hooks/useOrientation";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function Bottom() {
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
+    const carHeight =
+        displayMetrics.minTouchTarget * 2 + displayMetrics.scaleRpx(8);
     return (
         <View
             style={[
                 style.wrapper,
                 orientation === "horizontal"
                     ? {
-                        height: rpx(156),
+                        height: displayMetrics.isCarMode
+                            ? carHeight
+                            : rpx(156),
                     }
-                    : undefined,
+                    : displayMetrics.isCarMode
+                        ? { minHeight: carHeight }
+                        : undefined,
             ]}>
             <SeekBar />
             <PlayControl />

@@ -3,6 +3,7 @@ import { StyleProp, StyleSheet, TextStyle, View, ViewStyle } from "react-native"
 import rpx from "@/utils/rpx";
 import ThemeText from "./themeText";
 import useColors from "@/hooks/useColors";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface ITagProps {
     tagName: string;
@@ -11,10 +12,17 @@ interface ITagProps {
 }
 export default function Tag(props: ITagProps) {
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
     return (
         <View
             style={[
                 styles.tag,
+                displayMetrics.isCarMode
+                    ? {
+                        minHeight: displayMetrics.fontSizes.tag * 1.6,
+                        paddingHorizontal: displayMetrics.scaleRpx(12),
+                    }
+                    : null,
                 { backgroundColor: colors.card, borderColor: colors.divider },
                 props.containerStyle,
             ]}>

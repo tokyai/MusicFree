@@ -8,14 +8,25 @@ import Share from "react-native-share";
 import { B64Asset } from "@/constants/assetsConst";
 import IconButton from "@/components/base/iconButton";
 import { useCurrentMusic } from "@/core/trackPlayer";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function NavBar() {
     const navigation = useNavigation();
     const musicItem = useCurrentMusic();
+    const displayMetrics = useDisplayMetrics();
+    const navBarHeight = displayMetrics.isCarMode
+        ? displayMetrics.appBarHeight
+        : rpx(150);
     // const {showShare} = useShare();
 
     return (
-        <View style={styles.container}>
+        <View
+            style={[
+                styles.container,
+                displayMetrics.isCarMode
+                    ? { height: navBarHeight }
+                    : null,
+            ]}>
             <IconButton
                 name="arrow-left"
                 sizeType={"normal"}
@@ -25,12 +36,48 @@ export default function NavBar() {
                     navigation.goBack();
                 }}
             />
-            <View style={styles.headerContent}>
-                <Text numberOfLines={1} style={styles.headerTitleText}>
+            <View
+                style={[
+                    styles.headerContent,
+                    displayMetrics.isCarMode
+                        ? { height: navBarHeight }
+                        : null,
+                ]}>
+                <Text
+                    numberOfLines={1}
+                    style={[
+                        styles.headerTitleText,
+                        displayMetrics.isCarMode
+                            ? {
+                                fontSize: displayMetrics.fontSizes.title,
+                            }
+                            : null,
+                    ]}>
                     {musicItem?.title ?? "--"}
                 </Text>
-                <View style={styles.headerDesc}>
-                    <Text style={styles.headerArtistText} numberOfLines={1}>
+                <View
+                    style={[
+                        styles.headerDesc,
+                        displayMetrics.isCarMode
+                            ? {
+                                minHeight:
+                                    displayMetrics.fontSizes.subTitle * 1.35,
+                                paddingHorizontal:
+                                    displayMetrics.horizontalPadding,
+                            }
+                            : null,
+                    ]}>
+                    <Text
+                        style={[
+                            styles.headerArtistText,
+                            displayMetrics.isCarMode
+                                ? {
+                                    fontSize:
+                                        displayMetrics.fontSizes.subTitle,
+                                }
+                                : null,
+                        ]}
+                        numberOfLines={1}>
                         {musicItem?.artist}
                     </Text>
                     {musicItem?.platform ? (

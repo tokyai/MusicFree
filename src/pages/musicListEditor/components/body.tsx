@@ -17,6 +17,7 @@ import { useI18N } from "@/core/i18n";
 import useOrientation from "@/hooks/useOrientation";
 import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import Bottom from "./bottom";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function Body() {
     const { musicSheet } = useParams<"music-list-editor">();
@@ -27,6 +28,7 @@ export default function Body() {
     const [musicListChanged, setMusicListChanged] =
         useAtom(musicListChangedAtom);
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
     const selectedItems = useMemo(
         () => editingMusicList.filter(_ => _.checked),
         [editingMusicList],
@@ -36,6 +38,13 @@ export default function Body() {
             style={[
                 style.header,
                 orientation === "horizontal" ? style.landscapeHeader : null,
+                displayMetrics.isCarMode
+                    ? {
+                        minHeight: displayMetrics.minTouchTarget,
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                        paddingVertical: displayMetrics.scaleRpx(12),
+                    }
+                    : null,
             ]}>
             <Button
                 onPress={() => {

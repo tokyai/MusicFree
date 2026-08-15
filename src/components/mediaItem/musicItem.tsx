@@ -9,6 +9,7 @@ import TitleAndTag from "./titleAndTag";
 import ThemeText from "../base/themeText";
 import TrackPlayer from "@/core/trackPlayer";
 import Icon from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IMusicItemProps {
     index?: string | number;
@@ -41,6 +42,10 @@ export default function MusicItem(props: IMusicItemProps) {
         tableMode = false,
         compactTable = false,
     } = props;
+    const displayMetrics = useDisplayMetrics();
+    const checkIconSize = displayMetrics.isCarMode
+        ? displayMetrics.iconSizes.small
+        : rpx(22);
 
     const handlePress = () => {
         if (onItemPress) {
@@ -99,7 +104,7 @@ export default function MusicItem(props: IMusicItemProps) {
                             style={styles.icon}
                             color="#11659a"
                             name="check-circle"
-                            size={rpx(22)}
+                            size={checkIconSize}
                         />
                     )}
                     <ThemeText
@@ -173,7 +178,7 @@ export default function MusicItem(props: IMusicItemProps) {
                                 style={styles.icon}
                                 color="#11659a"
                                 name="check-circle"
-                                size={rpx(22)}
+                                size={checkIconSize}
                             />
                         )}
                         <ThemeText

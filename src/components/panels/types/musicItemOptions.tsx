@@ -31,6 +31,7 @@ import { getMediaExtraProperty } from "@/utils/mediaExtra";
 import lyricManager from "@/core/lyricManager";
 import { useI18N } from "@/core/i18n";
 import pluginManager from "@/core/pluginManager";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IMusicItemOptionsProps {
     /** 歌曲信息 */
@@ -55,6 +56,10 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
     const { t } = useI18N();
 
     const safeAreaInsets = useSafeAreaInsets();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? displayMetrics.listItemHeights.small ?? ITEM_HEIGHT
+        : ITEM_HEIGHT;
 
     const downloaded = LocalMusicSheet.isLocalMusic(musicItem);
     const associatedLrc = getMediaExtraProperty(musicItem, "associatedLrc");
@@ -237,7 +242,13 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
         <PanelBase
             renderBody={() => (
                 <>
-                    <View style={style.header}>
+                    <View
+                        style={[
+                            style.header,
+                            displayMetrics.isCarMode
+                                ? { width: "100%" }
+                                : null,
+                        ]}>
                         <FastImage
                             style={style.artwork}
                             source={musicItem?.artwork}
@@ -257,12 +268,18 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                         </View>
                     </View>
                     <Divider />
-                    <View style={style.wrapper}>
+                    <View
+                        style={[
+                            style.wrapper,
+                            displayMetrics.isCarMode
+                                ? { width: "100%" }
+                                : null,
+                        ]}>
                         <FlatList
                             data={options}
                             getItemLayout={(_, index) => ({
-                                length: ITEM_HEIGHT,
-                                offset: ITEM_HEIGHT * index,
+                                length: itemHeight,
+                                offset: itemHeight * index,
                                 index,
                             })}
                             ListFooterComponent={<View style={style.footer} />}

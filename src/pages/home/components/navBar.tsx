@@ -9,15 +9,26 @@ import Color from "color";
 import IconButton from "@/components/base/iconButton";
 import Icon from "@/components/base/icon.tsx";
 import { useI18N } from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 // todo icon: = musicFree(引入自定义字体 居中) search
 export default function NavBar() {
     const navigation = useNavigation<any>();
     const colors = useColors();
     const { t } = useI18N();
+    const displayMetrics = useDisplayMetrics();
 
     return (
-        <View style={styles.appbar}>
+        <View
+            style={[
+                styles.appbar,
+                displayMetrics.isCarMode
+                    ? {
+                        height: displayMetrics.appBarHeight,
+                        minHeight: displayMetrics.minTouchTarget,
+                    }
+                    : null,
+            ]}>
             <IconButton
                 accessibilityLabel={t("home.openSidebar.a11y")}
                 name="bars-3"
@@ -31,6 +42,16 @@ export default function NavBar() {
             <Pressable
                 style={[
                     styles.searchBar,
+                    displayMetrics.isCarMode
+                        ? {
+                            height: displayMetrics.minTouchTarget,
+                            maxHeight: displayMetrics.minTouchTarget,
+                            borderRadius:
+                                displayMetrics.minTouchTarget / 2,
+                            paddingHorizontal:
+                                displayMetrics.horizontalPadding,
+                        }
+                        : null,
                     {
                         backgroundColor: colors.placeholder,
                     },
@@ -43,7 +64,11 @@ export default function NavBar() {
                 <Icon
                     accessible={false}
                     name="magnifying-glass"
-                    size={rpx(32)}
+                    size={
+                        displayMetrics.isCarMode
+                            ? displayMetrics.iconSizes.small
+                            : rpx(32)
+                    }
                     color={Color(colors.text).alpha(0.6).toString()}
                 />
                 <ThemeText

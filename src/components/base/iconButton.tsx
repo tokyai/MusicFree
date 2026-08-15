@@ -5,6 +5,7 @@ import { StyleSheet, View } from "react-native";
 import useColors from "@/hooks/useColors";
 import { SvgProps } from "react-native-svg";
 import Icon, { IIconName } from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface IIconButtonProps extends SvgProps {
     name: IIconName;
@@ -25,17 +26,31 @@ export function IconButtonWithGesture(props: IIconButtonProps) {
         accessibilityLabel,
     } = props;
     const colors = useColors();
-    const textSize = iconSizeConst[size];
+    const displayMetrics = useDisplayMetrics();
+    const legacySize = iconSizeConst[size];
+    const textSize = displayMetrics.isCarMode
+        ? Math.max(legacySize, displayMetrics.iconSizes[size])
+        : legacySize;
+    const touchTarget = displayMetrics.isCarMode
+        ? displayMetrics.minTouchTarget
+        : undefined;
     const color = colors[colorMap[fontColor]];
     return (
         <TapGestureHandler onActivated={onPress}>
-            <View>
+            <View style={touchTarget ? { minWidth: touchTarget, minHeight: touchTarget } : null}>
                 <Icon
                     accessible
                     accessibilityLabel={accessibilityLabel}
                     name={name}
                     color={color}
-                    style={[{ minWidth: textSize }, styles.textCenter, style]}
+                    style={[
+                        {
+                            minWidth: Math.max(textSize, touchTarget ?? 0),
+                            minHeight: touchTarget,
+                        },
+                        styles.textCenter,
+                        style,
+                    ]}
                     size={textSize}
                 />
             </View>
@@ -46,13 +61,27 @@ export function IconButtonWithGesture(props: IIconButtonProps) {
 export default function IconButton(props: IIconButtonProps) {
     const { sizeType = "normal", fontColor = "normal", style, color } = props;
     const colors = useColors();
-    const size = iconSizeConst[sizeType];
+    const displayMetrics = useDisplayMetrics();
+    const legacySize = iconSizeConst[sizeType];
+    const size = displayMetrics.isCarMode
+        ? Math.max(legacySize, displayMetrics.iconSizes[sizeType])
+        : legacySize;
+    const touchTarget = displayMetrics.isCarMode
+        ? displayMetrics.minTouchTarget
+        : undefined;
 
     return (
         <Icon
             {...props}
             color={color ?? colors[colorMap[fontColor]]}
-            style={[{ minWidth: size }, styles.textCenter, style]}
+            style={[
+                {
+                    minWidth: Math.max(size, touchTarget ?? 0),
+                    minHeight: touchTarget,
+                },
+                styles.textCenter,
+                style,
+            ]}
             size={size}
         />
     );

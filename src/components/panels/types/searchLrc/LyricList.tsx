@@ -12,6 +12,7 @@ import ListEmpty from "@/components/base/listEmpty";
 import ListFooter from "@/components/base/listFooter";
 import { FlashList } from "@shopify/flash-list";
 import { useI18N } from "@/core/i18n";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 interface ILyricListWrapperProps {
     route: {
@@ -35,12 +36,16 @@ function LyricListImpl(props: ILyricListProps) {
     const searchState = data?.state ?? RequestStateCode.IDLE;
 
     const { t } = useI18N();
+    const displayMetrics = useDisplayMetrics();
+    const itemHeight = displayMetrics.isCarMode
+        ? Math.max(ITEM_HEIGHT, displayMetrics.minTouchTarget)
+        : ITEM_HEIGHT;
 
     return searchState === RequestStateCode.PENDING_FIRST_PAGE ? (
         <Loading />
     ) : (
         <FlashList
-            estimatedItemSize={ITEM_HEIGHT}
+            estimatedItemSize={itemHeight}
             renderItem={({ item }) => (
                 <LyricItem
                     lyricItem={item}

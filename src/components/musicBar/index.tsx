@@ -11,11 +11,19 @@ import TrackPlayer, { useCurrentMusic, useMusicState, useProgress } from "@/core
 import { musicIsPaused } from "@/utils/trackUtils";
 import MusicInfo from "./musicInfo";
 import Icon from "@/components/base/icon.tsx";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 function CircularPlayBtn() {
     const progress = useProgress();
     const musicState = useMusicState();
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
+    const progressRadius = displayMetrics.isCarMode
+        ? Math.max(
+            displayMetrics.scaleRpx(36),
+            displayMetrics.minTouchTarget / 2,
+        )
+        : rpx(36);
 
     const isPaused = musicIsPaused(musicState);
 
@@ -30,7 +38,7 @@ function CircularPlayBtn() {
                     : 0
             }
             duration={100}
-            radius={rpx(36)}
+            radius={progressRadius}
             activeStrokeColor={colors.musicBarText}
             inActiveStrokeColor={colors.textSecondary}>
             <IconButton
@@ -62,6 +70,7 @@ function MusicBar() {
 
     const colors = useColors();
     const safeAreaInsets = useSafeAreaInsets();
+    const displayMetrics = useDisplayMetrics();
 
     useEffect(() => {
         const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
@@ -83,9 +92,22 @@ function MusicBar() {
                 <View
                     style={[
                         style.wrapper,
+                        displayMetrics.isCarMode
+                            ? {
+                                height: Math.max(
+                                    displayMetrics.scaleRpx(132),
+                                    displayMetrics.minTouchTarget +
+                                        displayMetrics.scaleRpx(16),
+                                ),
+                            }
+                            : null,
                         {
                             backgroundColor: colors.musicBar,
-                            paddingRight: safeAreaInsets.right + rpx(24),
+                            paddingRight:
+                                safeAreaInsets.right +
+                                (displayMetrics.isCarMode
+                                    ? displayMetrics.horizontalPadding
+                                    : rpx(24)),
                         },
                     ]}
                     accessible
@@ -95,18 +117,42 @@ function MusicBar() {
                     // }}
                 >
                     <MusicInfo musicItem={musicItem} />
-                    <View style={style.actionGroup}>
+                    <View
+                        style={[
+                            style.actionGroup,
+                            displayMetrics.isCarMode
+                                ? {
+                                    width:
+                                        displayMetrics.minTouchTarget * 2 +
+                                        displayMetrics.horizontalPadding,
+                                }
+                                : null,
+                        ]}>
                         <CircularPlayBtn />
                         <Icon
                             accessible
                             accessibilityLabel="播放列表"
                             name="playlist"
-                            size={rpx(56)}
+                            size={
+                                displayMetrics.isCarMode
+                                    ? displayMetrics.iconSizes.big
+                                    : rpx(56)
+                            }
                             onPress={() => {
                                 showPanel("PlayList");
                             }}
                             color={colors.musicBarText}
-                            style={[style.actionIcon]}
+                            style={[
+                                style.actionIcon,
+                                displayMetrics.isCarMode
+                                    ? {
+                                        minWidth:
+                                            displayMetrics.minTouchTarget,
+                                        minHeight:
+                                            displayMetrics.minTouchTarget,
+                                    }
+                                    : null,
+                            ]}
                         />
                     </View>
                 </View>

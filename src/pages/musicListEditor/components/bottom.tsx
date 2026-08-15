@@ -15,7 +15,12 @@ import React, { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { editingMusicListAtom, musicListChangedAtom } from "../store/atom";
 
-export default function Bottom() {
+interface IBottomProps {
+    landscape?: boolean;
+}
+
+export default function Bottom(props: IBottomProps) {
+    const { landscape = false } = props;
     const { musicSheet } = useParams<"music-list-editor">();
     const [editingMusicList, setEditingMusicList] =
         useAtom(editingMusicListAtom);
@@ -42,9 +47,10 @@ export default function Bottom() {
     }
 
     return (
-        <View style={style.wrapper}>
+        <View style={[style.wrapper, landscape ? style.landscapeWrapper : null]}>
             <BottomIcon
                 icon="motion-play"
+                landscape={landscape}
                 title={t("musicListEditor.addToNextPlay")}
                 onPress={async () => {
                     TrackPlayer.addNext(selectedItems);
@@ -54,6 +60,7 @@ export default function Bottom() {
             />
             <BottomIcon
                 icon="folder-plus"
+                landscape={landscape}
                 title={t("musicListEditor.addToSheet")}
                 onPress={() => {
                     if (selectedItems.length) {
@@ -66,6 +73,7 @@ export default function Bottom() {
             />
             <BottomIcon
                 icon="arrow-down-tray"
+                landscape={landscape}
                 title={t("common.download")}
                 onPress={() => {
                     if (selectedItems.length) {
@@ -79,6 +87,7 @@ export default function Bottom() {
             />
             <BottomIcon
                 icon="trash-outline"
+                landscape={landscape}
                 title={t("common.delete")}
                 color={
                     selectedItems.length && musicSheet?.id
@@ -104,14 +113,19 @@ interface IBottomIconProps {
     title: string;
     color?: "text" | "textSecondary";
     onPress: () => void;
+    landscape?: boolean;
 }
 function BottomIcon(props: IBottomIconProps) {
-    const { icon, title, onPress, color = "text" } = props;
+    const { icon, title, onPress, color = "text", landscape = false } = props;
     const colors = useColors();
     return (
         <Pressable
             onPress={onPress}
-            style={[style.bottomIconWrapper, { backgroundColor: colors.appBar }]}>
+            style={[
+                style.bottomIconWrapper,
+                landscape ? style.landscapeIconWrapper : null,
+                { backgroundColor: colors.appBar },
+            ]}>
             <Icon
                 name={icon}
                 color={colors.appBarText}
@@ -136,12 +150,23 @@ const style = StyleSheet.create({
         height: rpx(144),
         flexDirection: "row",
     },
+    landscapeWrapper: {
+        height: "auto",
+        flex: 1,
+        flexDirection: "column",
+    },
 
     bottomIconWrapper: {
         flex: 1,
         height: "100%",
         alignItems: "center",
         justifyContent: "center",
+    },
+    landscapeIconWrapper: {
+        flex: 0,
+        width: "100%",
+        minHeight: rpx(108),
+        height: rpx(120),
     },
     bottomIconText: {
         marginTop: rpx(12),

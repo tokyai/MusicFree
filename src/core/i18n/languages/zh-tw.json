@@ -28,6 +28,8 @@
     "common.confirm": "確認",
     "common.view": "查看",
     "common.open": "打開",
+    "common.source": "音源",
+    "common.mediaType": "類型",
     "common.username": "用戶名",
     "common.password": "密碼",
     "common.cover": "封面",

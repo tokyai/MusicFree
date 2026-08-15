@@ -18,6 +18,8 @@ import { errorLog } from "@/utils/log.ts";
 import { getDocumentAsync } from "expo-document-picker";
 import { readAsStringAsync } from "expo-file-system";
 import { AuthType, createClient } from "webdav";
+import useOrientation from "@/hooks/useOrientation";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 
 export default function BackupSetting() {
     const { t } = useI18N();
@@ -27,6 +29,7 @@ export default function BackupSetting() {
     const webdavUrl = useAppConfig("webdav.url");
     const webdavUsername = useAppConfig("webdav.username");
     const webdavPassword = useAppConfig("webdav.password");
+    const orientation = useOrientation();
 
 
     const onBackupToLocal = async () => {
@@ -201,10 +204,9 @@ export default function BackupSetting() {
         }
     }
 
-    return (
-        <ScrollView style={style.wrapper}>
+    const resumeContent = (
+        <>
             <ListItemHeader>{t("sidebar.backupAndResume")}</ListItemHeader>
-
             <ListItem
                 withHorizontalPadding
                 onPress={() => {
@@ -250,6 +252,11 @@ export default function BackupSetting() {
             <ListItem withHorizontalPadding onPress={onResumeFromUrl}>
                 <ListItem.Content title={t("backupAndResume.resumeFromUrlDialogTitle")} />
             </ListItem>
+        </>
+    );
+
+    const webdavContent = (
+        <>
             <ListItemHeader>Webdav</ListItemHeader>
             <ListItem
                 withHorizontalPadding
@@ -294,6 +301,30 @@ export default function BackupSetting() {
             <ListItem withHorizontalPadding onPress={onResumeFromWebdav}>
                 <ListItem.Content title={t("backupAndResume.resumeFromWebdav")} />
             </ListItem>
+        </>
+    );
+
+    if (orientation === "horizontal") {
+        return (
+            <ResponsiveSplitView
+                primary={
+                    <ScrollView style={style.wrapper}>
+                        {resumeContent}
+                    </ScrollView>
+                }
+                secondary={
+                    <ScrollView style={style.wrapper}>
+                        {webdavContent}
+                    </ScrollView>
+                }
+            />
+        );
+    }
+
+    return (
+        <ScrollView style={style.wrapper}>
+            {resumeContent}
+            {webdavContent}
         </ScrollView>
     );
 }

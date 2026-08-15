@@ -3,6 +3,7 @@ import MusicItem from "@/components/mediaItem/musicItem";
 import Empty from "@/components/base/empty";
 import { FlashList } from "@shopify/flash-list";
 import rpx from "@/utils/rpx.ts";
+import useOrientation from "@/hooks/useOrientation";
 
 interface ISearchResultProps {
     result: IMusic.IMusicItem[];
@@ -13,13 +14,18 @@ const ITEM_HEIGHT = rpx(120);
 
 export default function SearchResult(props: ISearchResultProps) {
     const { result, musicSheet } = props;
+    const orientation = useOrientation();
     return (
         <FlashList
             estimatedItemSize={ITEM_HEIGHT}
             ListEmptyComponent={<Empty />}
             data={result}
             renderItem={({ item }) => (
-                <MusicItem musicItem={item} musicSheet={musicSheet} />
+                <MusicItem
+                    musicItem={item}
+                    musicSheet={musicSheet}
+                    tableMode={orientation === "horizontal"}
+                />
             )}
         />
     );

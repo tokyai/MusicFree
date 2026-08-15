@@ -1,16 +1,10 @@
-import React from "react";
-import globalStyle from "@/constants/globalStyle";
-import Operations from "./operations";
-import { View } from "react-native";
-import Sheets from "../homeBody/sheets";
+import React from 'react';
+import Operations from './operations';
+import Sheets from '../homeBody/sheets';
+import ResponsiveSplitView from '@/components/base/responsiveSplitView';
 
 export default function HomeBodyHorizontal() {
     return (
-        <View style={globalStyle.rowfwflex1}>
-            <Operations />
-            <View style={globalStyle.fwflex1}>
-                <Sheets />
-            </View>
-        </View>
+        <ResponsiveSplitView primary={<Operations />} secondary={<Sheets />} />
     );
 }

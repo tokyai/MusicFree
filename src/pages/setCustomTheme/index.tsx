@@ -1,6 +1,5 @@
 import React from "react";
 import { StyleSheet } from "react-native";
-import rpx from "@/utils/rpx";
 import AppBar from "@/components/base/appBar";
 import VerticalSafeAreaView from "@/components/base/verticalSafeAreaView";
 import globalStyle from "@/constants/globalStyle";
@@ -35,9 +34,6 @@ export default function SetCustomTheme() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        width: rpx(750),
-    },
     submit: {
         justifyContent: "center",
     },

@@ -5,7 +5,7 @@ import PluginManager from "@/core/pluginManager";
 import useColors from "@/hooks/useColors";
 import rpx, { vw } from "@/utils/rpx";
 import { useAtomValue } from "jotai";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef } from "react";
 import { Text } from "react-native";
 import { SceneMap, TabBar, TabView } from "react-native-tab-view";
 import { searchResultsAtom } from "../../store/atoms";
@@ -15,6 +15,35 @@ import ResultWrapper from "./resultWrapper";
 
 interface IResultSubPanelProps {
     tab: ICommon.SupportMediaType;
+    selectedPluginKey?: string;
+    onPluginChange: (key: string) => void;
+}
+
+interface ISearchPluginResultProps {
+    tab: ICommon.SupportMediaType;
+    pluginHash: string;
+    pluginName: string;
+}
+
+export function SearchPluginResult(props: ISearchPluginResultProps) {
+    const { tab, pluginHash, pluginName } = props;
+    const searchResults = useAtomValue(searchResultsAtom);
+    const pluginSearchResult = searchResults[tab][pluginHash];
+    const pluginSearchResultRef = useRef(pluginSearchResult);
+
+    useEffect(() => {
+        pluginSearchResultRef.current = pluginSearchResult;
+    }, [pluginSearchResult]);
+
+    return (
+        <ResultWrapper
+            tab={tab}
+            searchResult={pluginSearchResult}
+            pluginHash={pluginHash}
+            pluginName={pluginName}
+            pluginSearchResultRef={pluginSearchResultRef}
+        />
+    );
 }
 
 // 展示结果的视图
@@ -25,25 +54,13 @@ function getResultComponent(
 ) {
     return tab in renderMap
         ? memo(
-            () => {
-                const searchResults = useAtomValue(searchResultsAtom);
-                const pluginSearchResult = searchResults[tab][pluginHash];
-                const pluginSearchResultRef = useRef(pluginSearchResult);
-
-                useEffect(() => {
-                    pluginSearchResultRef.current = pluginSearchResult;
-                }, [pluginSearchResult]);
-
-                return (
-                    <ResultWrapper
-                        tab={tab}
-                        searchResult={pluginSearchResult}
-                        pluginHash={pluginHash}
-                        pluginName={pluginName}
-                        pluginSearchResultRef={pluginSearchResultRef}
-                    />
-                );
-            },
+            () => (
+                <SearchPluginResult
+                    tab={tab}
+                    pluginHash={pluginHash}
+                    pluginName={pluginName}
+                />
+            ),
             () => true,
         )
         : () => <DefaultResults />;
@@ -63,20 +80,25 @@ function getSubRouterScene(
 }
 
 function ResultSubPanel(props: IResultSubPanelProps) {
-    const [index, setIndex] = useState(0);
     const colors = useColors();
     const { t } = useI18N();
 
-    const routes = PluginManager.getSortedSearchablePlugins(props.tab).map(
-        _ => ({
-            key: _.hash,
-            title: _.name,
-        }),
+    const routes = useMemo(
+        () =>
+            PluginManager.getSortedSearchablePlugins(props.tab).map(_ => ({
+                key: _.hash,
+                title: _.name,
+            })),
+        [props.tab],
     );
     const renderScene = useMemo(
         () => getSubRouterScene(props.tab, routes),
-        [props.tab],
+        [props.tab, routes],
     );
+    const selectedIndex = routes.findIndex(
+        route => route.key === props.selectedPluginKey,
+    );
+    const index = selectedIndex >= 0 ? selectedIndex : 0;
 
     if (!routes.length) {
         return <Empty />;
@@ -122,7 +144,12 @@ function ResultSubPanel(props: IResultSubPanelProps) {
                 />
             )}
             renderScene={renderScene}
-            onIndexChange={setIndex}
+            onIndexChange={nextIndex => {
+                const nextRoute = routes[nextIndex];
+                if (nextRoute) {
+                    props.onPluginChange(nextRoute.key);
+                }
+            }}
             initialLayout={{ width: vw(100) }}
         />
     );

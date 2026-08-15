@@ -33,6 +33,8 @@
     "common.name": "名称",
     "common.comment": "评论",
     "common.open": "打开",
+    "common.source": "音源",
+    "common.mediaType": "类型",
     "sidebar.basicSettings": "基本设置",
     "sidebar.pluginManagement": "插件管理",
     "sidebar.themeSettings": "主题设置",

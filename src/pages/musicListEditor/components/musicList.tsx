@@ -14,15 +14,17 @@ import SortableFlatList from "@/components/base/SortableFlatList";
 import CheckBox from "@/components/base/checkbox";
 import useColors from "@/hooks/useColors";
 import Empty from "@/components/base/empty";
+import useOrientation from "@/hooks/useOrientation";
 
 const ITEM_HEIGHT = rpx(120);
 
 interface IMusicEditorItemProps {
     index: number;
     editorMusicItem: IEditorMusicItem;
+    tableMode?: boolean;
 }
 function _MusicEditorItem(props: IMusicEditorItemProps) {
-    const { index, editorMusicItem } = props;
+    const { index, editorMusicItem, tableMode } = props;
     const setEditingMusicList = useSetAtom(editingMusicListAtom);
 
     const onPress = useCallback(() => {
@@ -44,6 +46,7 @@ function _MusicEditorItem(props: IMusicEditorItemProps) {
             showMoreIcon={false}
             itemPaddingRight={rpx(100)}
             onItemPress={onPress}
+            tableMode={tableMode}
         />
     );
 }
@@ -52,7 +55,8 @@ const MusicEditorItem = memo(
     _MusicEditorItem,
     (prev, curr) =>
         prev.editorMusicItem === curr.editorMusicItem &&
-        prev.index === curr.index,
+        prev.index === curr.index &&
+        prev.tableMode === curr.tableMode,
 );
 
 /** 音乐列表 */
@@ -61,19 +65,26 @@ export default function MusicList() {
     const [editingMusicList, setEditingMusicList] =
         useAtom(editingMusicListAtom);
     const setMusicListChanged = useSetAtom(musicListChangedAtom);
+    const orientation = useOrientation();
 
     const renderItem = useCallback(
         ({ index, item }: any) => {
-            return <MusicEditorItem editorMusicItem={item} index={index!} />;
+            return (
+                <MusicEditorItem
+                    editorMusicItem={item}
+                    index={index!}
+                    tableMode={orientation === "horizontal"}
+                />
+            );
         },
-        [editingMusicList],
+        [editingMusicList, orientation],
     );
     const colors = useColors();
 
     return editingMusicList?.length ? (
         <SortableFlatList
             activeBackgroundColor={colors.placeholder}
-            marginTop={marginTop}
+            marginTop={orientation === "horizontal" ? 0 : marginTop}
             data={editingMusicList}
             renderItem={renderItem}
             itemHeight={ITEM_HEIGHT}

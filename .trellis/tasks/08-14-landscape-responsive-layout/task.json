@@ -1,0 +1,30 @@
+{
+  "id": "landscape-responsive-layout",
+  "name": "landscape-responsive-layout",
+  "title": "横屏响应式布局优化",
+  "description": "在不改变竖屏和业务逻辑的前提下，为 MusicFree 全部主要页面、列表、设置、编辑器和浮层补齐横屏左右布局。",
+  "status": "in_progress",
+  "dev_type": "frontend",
+  "scope": "src/pages, src/components, src/hooks",
+  "package": null,
+  "priority": "P2",
+  "creator": "tokyai",
+  "assignee": "tokyai",
+  "createdAt": "2026-08-14",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "master",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    "src/hooks/useOrientation.ts",
+    "src/components/",
+    "src/pages/"
+  ],
+  "notes": "共享 React Native 实现同时覆盖 Android 和 iOS；Android 验证基线为 API 24 及以上。",
+  "meta": {}
+}

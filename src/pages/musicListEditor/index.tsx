@@ -7,7 +7,6 @@ import { useParams } from "@/core/router";
 import { useSetAtom } from "jotai";
 import React, { useEffect } from "react";
 import Body from "./components/body";
-import Bottom from "./components/bottom";
 import { editingMusicListAtom, musicListChangedAtom } from "./store/atom";
 
 export default function MusicListEditor() {
@@ -31,7 +30,6 @@ export default function MusicListEditor() {
             <StatusBar />
             <AppBar>{musicSheet?.title ?? i18n.t("common.sheet")}</AppBar>
             <Body />
-            <Bottom />
         </VerticalSafeAreaView>
     );
 }

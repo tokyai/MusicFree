@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import rpx from "@/utils/rpx";
 import Config, { useAppConfig } from "@/core/appConfig";
 import { FlatList } from "react-native-gesture-handler";
@@ -12,6 +12,9 @@ import globalStyle from "@/constants/globalStyle";
 import { showDialog } from "@/components/dialogs/useDialog";
 import AppBar from "@/components/base/appBar";
 import Fab from "@/components/base/fab";
+import IconTextButton from "@/components/base/iconTextButton";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
+import useOrientation from "@/hooks/useOrientation";
 import { useI18N } from "@/core/i18n";
 
 interface ISubscribeItem {
@@ -26,6 +29,7 @@ export default function PluginSubscribe() {
     const [subscribes, setSubscribes] = useState<Array<ISubscribeItem>>([]);
 
     const { t } = useI18N();
+    const orientation = useOrientation();
 
     useEffect(() => {
         try {
@@ -79,70 +83,102 @@ export default function PluginSubscribe() {
         }
     };
 
+    const openAddDialog = () => {
+        showDialog("SubscribePluginDialog", {
+            onSubmit,
+        });
+    };
+
+    const subscribeList = (
+        <HorizontalSafeAreaView style={globalStyle.flex1}>
+            <FlatList
+                style={style.listWrapper}
+                ListEmptyComponent={Empty}
+                data={subscribes}
+                renderItem={({ item, index }) => {
+                    return (
+                        <ListItem
+                            withHorizontalPadding
+                            onPress={() => {
+                                showDialog("SubscribePluginDialog", {
+                                    subscribeItem: item,
+                                    onSubmit,
+                                    editingIndex: index,
+                                    onDelete(editingIndex, hideDialog) {
+                                        Config.setConfig(
+                                            "plugin.subscribeUrl",
+                                            JSON.stringify([
+                                                ...subscribes.slice(
+                                                    0,
+                                                    editingIndex,
+                                                ),
+                                                ...subscribes.slice(
+                                                    editingIndex + 1,
+                                                ),
+                                            ]),
+                                        );
+                                        hideDialog();
+                                        Toast.success(
+                                            t("toast.deleteSuccess"),
+                                        );
+                                    },
+                                });
+                            }}>
+                            <ListItem.Content
+                                title={item.name}
+                                description={item.url}
+                            />
+                            <ListItem.ListItemIcon
+                                icon="share"
+                                position="right"
+                                onPress={() => {
+                                    Clipboard.setString(item.url);
+                                    Toast.success(
+                                        t("toast.copiedToClipboard"),
+                                    );
+                                }}
+                            />
+                        </ListItem>
+                    );
+                }}
+                getItemLayout={(_, index) => ({
+                    length: ITEM_HEIGHT,
+                    offset: ITEM_HEIGHT * index,
+                    index,
+                })}
+            />
+        </HorizontalSafeAreaView>
+    );
+
+    if (orientation === "horizontal") {
+        return (
+            <>
+                <AppBar>{t("pluginSetting.menu.subscriptionSetting")}</AppBar>
+                <ResponsiveSplitView
+                    primary={subscribeList}
+                    secondary={
+                        <View style={style.actionRail}>
+                            <IconTextButton
+                                icon="plus"
+                                onPress={openAddDialog}>
+                                {t("pluginSetting.menu.subscriptionSetting")}
+                            </IconTextButton>
+                        </View>
+                    }
+                    primaryWeight={62}
+                    secondaryWeight={38}
+                />
+            </>
+        );
+    }
+
     return (
         <>
             <AppBar>{t("pluginSetting.menu.subscriptionSetting")}</AppBar>
-            <HorizontalSafeAreaView style={globalStyle.flex1}>
-                <FlatList
-                    style={style.listWrapper}
-                    ListEmptyComponent={Empty}
-                    data={subscribes}
-                    renderItem={({ item, index }) => {
-                        return (
-                            <ListItem
-                                withHorizontalPadding
-                                onPress={() => {
-                                    showDialog("SubscribePluginDialog", {
-                                        subscribeItem: item,
-                                        onSubmit,
-                                        editingIndex: index,
-                                        onDelete(editingIndex, hideDialog) {
-                                            Config.setConfig(
-                                                "plugin.subscribeUrl",
-                                                JSON.stringify([
-                                                    ...subscribes.slice(
-                                                        0,
-                                                        editingIndex,
-                                                    ),
-                                                    ...subscribes.slice(
-                                                        editingIndex + 1,
-                                                    ),
-                                                ]),
-                                            );
-                                            hideDialog();
-                                            Toast.success(t("toast.deleteSuccess"));
-                                        },
-                                    });
-                                }}>
-                                <ListItem.Content
-                                    title={item.name}
-                                    description={item.url}
-                                />
-                                <ListItem.ListItemIcon
-                                    icon="share"
-                                    position="right"
-                                    onPress={() => {
-                                        Clipboard.setString(item.url);
-                                        Toast.success(t("toast.copiedToClipboard"));
-                                    }}
-                                />
-                            </ListItem>
-                        );
-                    }}
-                    getItemLayout={(_, index) => ({
-                        length: ITEM_HEIGHT,
-                        offset: ITEM_HEIGHT * index,
-                        index,
-                    })}
-                />
-            </HorizontalSafeAreaView>
+            {subscribeList}
             <Fab
                 icon="plus"
-                onPress={() => {
-                    showDialog("SubscribePluginDialog", {
-                        onSubmit,
-                    });
-                }}
+                onPress={openAddDialog}
             />
         </>
     );
@@ -155,6 +191,10 @@ const style = StyleSheet.create({
     },
     listWrapper: {
         marginTop: rpx(24),
+    },
+    actionRail: {
+        flex: 1,
+        padding: rpx(24),
     },
     fab: {
         position: "absolute",

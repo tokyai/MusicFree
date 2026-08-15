@@ -160,14 +160,29 @@ export default function (props: IPanelBaseProps) {
         <Animated.View
             style={[
                 style.wrapper,
-                orientation === "horizontal" ? {
-                    height: vh(100) - safeAreaInsets.top,
-                    bottom: 0,
-                } : {
-                    top: positionMethod === "top" ? (NativeUtils.getWindowDimensions().height + safeAreaInsets.top) - height - safeAreaInsets.bottom : undefined,
-                    bottom: positionMethod === "bottom" ? 0 : undefined,
-                    height: height,
-                },
+                orientation === "horizontal"
+                    ? [
+                        style.landscapeWrapper,
+                        {
+                            height:
+                                  vh(100) -
+                                  safeAreaInsets.top -
+                                  safeAreaInsets.bottom,
+                            right: safeAreaInsets.right,
+                            bottom: safeAreaInsets.bottom,
+                        },
+                    ]
+                    : {
+                        top:
+                              positionMethod === "top"
+                                  ? NativeUtils.getWindowDimensions().height +
+                                    safeAreaInsets.top -
+                                    height -
+                                    safeAreaInsets.bottom
+                                  : undefined,
+                        bottom: positionMethod === "bottom" ? 0 : undefined,
+                        height: height,
+                    },
                 {
                     backgroundColor: colors.backdrop,
                 },
@@ -223,6 +238,11 @@ const style = StyleSheet.create({
         borderTopLeftRadius: rpx(28),
         borderTopRightRadius: rpx(28),
         zIndex: 15010,
+    },
+    landscapeWrapper: {
+        borderTopRightRadius: 0,
+        borderBottomLeftRadius: rpx(28),
+        overflow: "hidden",
     },
     kbContainer: {
         zIndex: 15010,

@@ -1,6 +1,8 @@
 import Empty from "@/components/base/empty";
+import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView";
 import IconButton from "@/components/base/iconButton";
 import Loading from "@/components/base/loading";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import StatusBar from "@/components/base/statusBar";
 import Button from "@/components/base/textButton.tsx";
 import ThemeText from "@/components/base/themeText";
@@ -10,6 +12,7 @@ import i18n from "@/core/i18n";
 import { useParams } from "@/core/router";
 import useColors from "@/hooks/useColors";
 import useHardwareBack from "@/hooks/useHardwareBack";
+import useOrientation from "@/hooks/useOrientation";
 import rpx from "@/utils/rpx";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -58,6 +61,7 @@ export default function FileSelector() {
     );
     const navigation = useNavigation();
     const colors = useColors();
+    const orientation = useOrientation();
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -200,7 +204,7 @@ export default function FileSelector() {
 
     const currentPageAllChecked = useMemo(() => {
         return (
-            filesData.length &&
+            filesData.length > 0 &&
             filesData.every(file => checkedPaths.includes(file.path))
         );
     }, [filesData, checkedPaths]);
@@ -221,6 +225,66 @@ export default function FileSelector() {
             </View>
         ) : null;
     };
+
+    const submitSelection = async () => {
+        if (checkedItems.length) {
+            const shouldBack = await onAction?.(checkedItems);
+            if (shouldBack) {
+                navigation.goBack();
+            }
+        }
+    };
+
+    const actionButton = (
+        <Pressable onPress={submitSelection} style={style.actionButton}>
+            <View
+                style={[
+                    style.scanBtn,
+                    {
+                        backgroundColor: colors.appBar,
+                    },
+                ]}>
+                <ThemeText
+                    fontColor={"appBarText"}
+                    opacity={checkedItems.length > 0 ? undefined : 0.6}
+                    numberOfLines={2}
+                    style={style.actionText}>
+                    {actionText}
+                    {multi && checkedItems?.length > 0
+                        ? ` (选中${checkedItems.length})`
+                        : ""}
+                </ThemeText>
+            </View>
+        </Pressable>
+    );
+
+    const fileList = loading ? (
+        <Loading />
+    ) : (
+        <FlatList
+            ListHeaderComponent={
+                orientation === "vertical" ? renderHeader : undefined
+            }
+            ListEmptyComponent={Empty}
+            style={globalStyle.fwflex1}
+            data={filesData}
+            getItemLayout={(_, index) => ({
+                length: ITEM_HEIGHT,
+                offset: ITEM_HEIGHT * index,
+                index,
+            })}
+            renderItem={renderItem}
+        />
+    );
+
+    const landscapeActions = (
+        <View style={style.actionRail}>
+            {multi ? (
+                <View style={style.landscapeSelectAll}>{renderHeader()}</View>
+            ) : null}
+            {actionButton}
+        </View>
+    );
 
     return (
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
@@ -245,50 +309,21 @@ export default function FileSelector() {
                     {currentPath.path}
                 </ThemeText>
             </View>
-            {loading ? (
-                <Loading />
+            {orientation === "horizontal" ? (
+                <HorizontalSafeAreaView style={globalStyle.flex1}>
+                    <ResponsiveSplitView
+                        primary={fileList}
+                        secondary={landscapeActions}
+                        primaryWeight={62}
+                        secondaryWeight={38}
+                    />
+                </HorizontalSafeAreaView>
             ) : (
                 <>
-                    <FlatList
-                        ListHeaderComponent={renderHeader}
-                        ListEmptyComponent={Empty}
-                        style={globalStyle.fwflex1}
-                        data={filesData}
-                        getItemLayout={(_, index) => ({
-                            length: ITEM_HEIGHT,
-                            offset: ITEM_HEIGHT * index,
-                            index,
-                        })}
-                        renderItem={renderItem}
-                    />
+                    {fileList}
+                    {actionButton}
                 </>
             )}
-            <Pressable
-                onPress={async () => {
-                    if (checkedItems.length) {
-                        const shouldBack = await onAction?.(checkedItems);
-                        if (shouldBack) {
-                            navigation.goBack();
-                        }
-                    }
-                }}>
-                <View
-                    style={[
-                        style.scanBtn,
-                        {
-                            backgroundColor: colors.appBar,
-                        },
-                    ]}>
-                    <ThemeText
-                        fontColor={"appBarText"}
-                        opacity={checkedItems.length > 0 ? undefined : 0.6}>
-                        {actionText}
-                        {multi && checkedItems?.length > 0
-                            ? ` (选中${checkedItems.length})`
-                            : ""}
-                    </ThemeText>
-                </View>
-            </Pressable>
         </VerticalSafeAreaView>
     );
 }
@@ -316,5 +351,23 @@ const style = StyleSheet.create({
         paddingHorizontal: rpx(24),
         flexDirection: "row",
         alignItems: "center",
+    },
+    landscapeSelectAll: {
+        width: "100%",
+        paddingHorizontal: rpx(24),
+        paddingTop: rpx(24),
+    },
+    actionRail: {
+        flex: 1,
+        minWidth: 0,
+        paddingBottom: rpx(12),
+    },
+    actionButton: {
+        width: "100%",
+        marginTop: "auto",
+    },
+    actionText: {
+        textAlign: "center",
+        paddingHorizontal: rpx(12),
     },
 });

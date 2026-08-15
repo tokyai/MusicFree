@@ -26,8 +26,8 @@ function ResultWrapper(props: IResultWrapperProps) {
     const [searchState, setSearchState] = useState<RequestStateCode>(
         searchResult?.state ?? RequestStateCode.IDLE,
     );
-    const orientation = useOrientation();
     const query = useAtomValue(queryAtom);
+    const orientation = useOrientation();
 
     const ResultComponent = renderMap[tab]!;
     const data: any = searchResult?.data ?? [];
@@ -53,6 +53,7 @@ function ResultWrapper(props: IResultWrapperProps) {
             index={index}
             pluginHash={pluginHash}
             pluginSearchResultRef={pluginSearchResultRef}
+            tableMode={tab === "music" && orientation === "horizontal"}
         />
     );
 
@@ -78,9 +79,7 @@ function ResultWrapper(props: IResultWrapperProps) {
                     search(undefined, undefined, tab, pluginHash);
             }}
             estimatedItemSize={tab === "sheet" ? rpx(306) : rpx(120)}
-            numColumns={
-                tab === "sheet" ? (orientation === "vertical" ? 3 : 4) : 1
-            }
+            numColumns={tab === "sheet" ? 3 : 1}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
         />

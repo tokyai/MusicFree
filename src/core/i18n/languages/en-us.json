@@ -28,6 +28,8 @@
     "common.confirm": "Confirm",
     "common.view": "View",
     "common.open": "Open",
+    "common.source": "Source",
+    "common.mediaType": "Type",
     "common.username": "Username",
     "common.password": "Password",
     "common.cover": "Cover",

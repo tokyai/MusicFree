@@ -11,6 +11,7 @@ import { isSameMediaItem } from "@/utils/mediaUtils";
 import Icon from "../base/icon";
 import { iconSizeConst } from "@/constants/uiConst";
 import useColors from "@/hooks/useColors";
+import useOrientation from "@/hooks/useOrientation";
 
 interface IMusicListProps {
     /** 顶部 */
@@ -32,6 +33,8 @@ interface IMusicListProps {
     highlightMusicItem?: IMusic.IMusicItem | null;
     onRetry?: () => void;
     onLoadMore?: () => void;
+    /** 详情右侧窗格使用更紧凑的横屏列 */
+    compactLandscape?: boolean;
 }
 const ITEM_HEIGHT = rpx(120);
 
@@ -47,8 +50,10 @@ export default function MusicList(props: IMusicListProps) {
         onRetry,
         onLoadMore,
         highlightMusicItem,
+        compactLandscape = false,
     } = props;    
     const colors = useColors();
+    const orientation = useOrientation();
     const flashListRef = useRef<FlashList<IMusic.IMusicItem>>(null);
     const [showBadge, setShowBadge] = useState(false);
     const hideTimeoutRef = useRef<NodeJS.Timeout>();
@@ -137,6 +142,8 @@ export default function MusicList(props: IMusicListProps) {
                             }}
                             musicSheet={musicSheet}
                             highlight={isSameMediaItem(musicItem, highlightMusicItem)}
+                            tableMode={orientation === "horizontal"}
+                            compactTable={compactLandscape}
                         />
                     );
                 }}

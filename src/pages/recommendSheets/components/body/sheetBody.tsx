@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useState } from "react";
+import React, { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import rpx from "@/utils/rpx";
 import globalStyle from "@/constants/globalStyle";
@@ -9,30 +9,99 @@ import useRecommendList from "../../hooks/useRecommendListTags";
 import SheetList from "./sheetList";
 import { hidePanel, showPanel } from "@/components/panels/usePanel";
 import { useI18N } from "@/core/i18n";
+import useOrientation from "@/hooks/useOrientation";
+import LandscapeNavigationRail, {
+    ILandscapeNavigationRailItem,
+    ILandscapeNavigationRailSection,
+} from "@/components/base/landscapeNavigationRail";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
+
+interface ILandscapeSource {
+    items: ILandscapeNavigationRailItem[];
+    selectedKey: string;
+    onSelect: (key: string) => void;
+}
 
 interface IProps {
     hash: string;
+    defaultTag: ICommon.IUnique;
+    selectedTag: ICommon.IUnique;
+    firstTag: ICommon.IUnique;
+    onTagSelect: (
+        tag: ICommon.IUnique,
+        showAsFirstTag: boolean,
+    ) => void;
+    landscapeSource?: ILandscapeSource;
 }
 
 
 function SheetBody(props: IProps) {
-    const { hash } = props;
+    const {
+        hash,
+        defaultTag,
+        selectedTag,
+        firstTag,
+        onTagSelect,
+        landscapeSource,
+    } = props;
 
     const { t } = useI18N();
-
-    const defaultTag: ICommon.IUnique = useMemo(() => ({
-        title: t("common.default"),
-        id: "",
-    }), [t]);
-
-    // 选中的tag
-    const [selectedTag, setSelectedTag] = useState<ICommon.IUnique>(defaultTag);
-
-    // 第一个tag
-    const [firstTag, setFirstTag] = useState<ICommon.IUnique>(defaultTag);
+    const orientation = useOrientation();
 
     // 所有tag
     const tags = useRecommendList(hash);
+
+    if (orientation === "horizontal" && landscapeSource) {
+        const pinnedTags = [defaultTag, ...(tags?.pinned ?? [])];
+        const sections: ILandscapeNavigationRailSection[] = [
+            {
+                key: "sources",
+                title: t("common.source"),
+                items: landscapeSource.items,
+                selectedKey: landscapeSource.selectedKey,
+                onSelect: landscapeSource.onSelect,
+            },
+            {
+                key: "pinned-tags",
+                title: t("panel.sheetTags.title"),
+                items: pinnedTags.map(tag => ({
+                    key: tag.id,
+                    title: tag.title ?? t("common.unknownName"),
+                })),
+                selectedKey: selectedTag.id,
+                onSelect: key => {
+                    const tag = pinnedTags.find(item => item.id === key);
+                    if (tag) {
+                        onTagSelect(tag, tag.id === defaultTag.id);
+                    }
+                },
+            },
+            ...(tags?.data ?? []).map((tagGroup, groupIndex) => ({
+                key: `tag-group-${groupIndex}`,
+                title: tagGroup.title,
+                items: tagGroup.data.map(tag => ({
+                    key: tag.id,
+                    title: tag.title ?? t("common.unknownName"),
+                })),
+                selectedKey: selectedTag.id,
+                onSelect: (key: string) => {
+                    const tag = tagGroup.data.find(item => item.id === key);
+                    if (tag) {
+                        onTagSelect(tag, true);
+                    }
+                },
+            })),
+        ];
+
+        return (
+            <ResponsiveSplitView
+                primary={<LandscapeNavigationRail sections={sections} />}
+                secondary={
+                    <SheetList tag={selectedTag} pluginHash={hash} />
+                }
+            />
+        );
+    }
 
     return (
         <View style={globalStyle.fwflex1}>
@@ -49,8 +118,7 @@ function SheetBody(props: IProps) {
                         showPanel("SheetTags", {
                             tags: tags?.data ?? [],
                             onTagPressed(tag) {
-                                setSelectedTag(tag);
-                                setFirstTag(tag);
+                                onTagSelect(tag, true);
                                 hidePanel();
                             },
                         });
@@ -62,7 +130,7 @@ function SheetBody(props: IProps) {
                         title={_?.title ?? ""}
                         selected={selectedTag.id === _.id}
                         onPress={() => {
-                            setSelectedTag(_);
+                            onTagSelect(_, false);
                         }}
                     />
                 ))}
@@ -72,7 +140,7 @@ function SheetBody(props: IProps) {
     );
 }
 
-export default memo(SheetBody, (prev, curr) => prev.hash === curr.hash);
+export default memo(SheetBody);
 
 const style = StyleSheet.create({
     headerWrapper: {

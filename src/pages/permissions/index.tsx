@@ -1,5 +1,7 @@
 import AppBar from "@/components/base/appBar";
+import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView";
 import ListItem from "@/components/base/listItem";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import StatusBar from "@/components/base/statusBar";
 import ThemeSwitch from "@/components/base/switch";
 import ThemeText from "@/components/base/themeText";
@@ -9,8 +11,9 @@ import { useI18N } from "@/core/i18n";
 import LyricUtil from "@/native/lyricUtil";
 import NativeUtils from "@/native/utils";
 import rpx from "@/utils/rpx";
-import React, { useEffect, useRef, useState } from "react";
-import { AppState, StyleSheet } from "react-native";
+import useOrientation from "@/hooks/useOrientation";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, ScrollView, StyleSheet, View } from "react-native";
 
 type IPermissionTypes = "floatingWindow" | "fileStorage";
 
@@ -25,10 +28,10 @@ export default function Permissions() {
     });
     const { t } = useI18N();
 
-    async function checkPermission(type?: IPermissionTypes) {
-        let newPermission = {
-            ...permissions,
-        };
+    const orientation = useOrientation();
+
+    const checkPermission = useCallback(async (type?: IPermissionTypes) => {
+        const newPermission: Partial<Record<IPermissionTypes, boolean>> = {};
         if (!type || type === "floatingWindow") {
             const hasPermission = await LyricUtil.checkSystemAlertPermission();
             newPermission.floatingWindow = hasPermission;
@@ -42,8 +45,8 @@ export default function Permissions() {
 
         // }
 
-        setPermissions(newPermission);
-    }
+        setPermissions(prev => ({ ...prev, ...newPermission }));
+    }, []);
 
     useEffect(() => {
         checkPermission();
@@ -64,15 +67,16 @@ export default function Permissions() {
         return () => {
             subscription.remove();
         };
-    }, []);
+    }, [checkPermission]);
 
-    return (
-        <VerticalSafeAreaView style={globalStyle.fwflex1}>
-            <StatusBar />
-            <AppBar>{t("permissionSetting.title")}</AppBar>
-            <ThemeText style={styles.description}>
-                {t("permissionSetting.description")}
-            </ThemeText>
+    const description = (
+        <ThemeText style={styles.description}>
+            {t("permissionSetting.description")}
+        </ThemeText>
+    );
+
+    const permissionItems = (
+        <View style={styles.permissionItems}>
             <ListItem
                 withHorizontalPadding
                 heightType="big"
@@ -97,6 +101,26 @@ export default function Permissions() {
                 />
                 <ThemeSwitch value={permissions.fileStorage} />
             </ListItem>
+        </View>
+    );
+
+    return (
+        <VerticalSafeAreaView style={globalStyle.fwflex1}>
+            <StatusBar />
+            <AppBar>{t("permissionSetting.title")}</AppBar>
+            {orientation === "horizontal" ? (
+                <HorizontalSafeAreaView style={globalStyle.flex1}>
+                    <ResponsiveSplitView
+                        primary={<ScrollView>{description}</ScrollView>}
+                        secondary={<ScrollView>{permissionItems}</ScrollView>}
+                    />
+                </HorizontalSafeAreaView>
+            ) : (
+                <>
+                    {description}
+                    {permissionItems}
+                </>
+            )}
             {/* <ListItem withHorizontalPadding heightType="big">
                 <ListItem.Content
                     title="后台运行"
@@ -112,5 +136,8 @@ const styles = StyleSheet.create({
         width: "100%",
         paddingHorizontal: rpx(24),
         marginVertical: rpx(36),
+    },
+    permissionItems: {
+        width: "100%",
     },
 });

@@ -1,4 +1,6 @@
 import Image from "@/components/base/image";
+import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import ThemeText from "@/components/base/themeText";
 import { showPanel } from "@/components/panels/usePanel";
 import { ImgAsset } from "@/constants/assetsConst";
@@ -6,6 +8,7 @@ import globalStyle from "@/constants/globalStyle";
 import pathConst from "@/constants/pathConst";
 import { useI18N } from "@/core/i18n";
 import Theme from "@/core/theme";
+import useOrientation from "@/hooks/useOrientation";
 import { CustomizedColors } from "@/hooks/useColors";
 import { grayRate } from "@/utils/colorUtil";
 import rpx from "@/utils/rpx";
@@ -22,6 +25,7 @@ export default function Body() {
     const theme = Theme.useTheme();
     const backgroundInfo = Theme.useBackground();
     const { t } = useI18N();
+    const orientation = useOrientation();
 
     async function onImageClick() {
         try {
@@ -123,16 +127,18 @@ export default function Body() {
         }
     }
 
-    return (
-        <ScrollView style={globalStyle.fwflex1}>
-            <TouchableOpacity onPress={onImageClick}>
-                <Image
-                    style={styles.image}
-                    uri={backgroundInfo?.url}
-                    emptySrc={ImgAsset.addBackground}
-                />
-            </TouchableOpacity>
+    const preview = (
+        <TouchableOpacity onPress={onImageClick}>
+            <Image
+                style={styles.image}
+                uri={backgroundInfo?.url}
+                emptySrc={ImgAsset.addBackground}
+            />
+        </TouchableOpacity>
+    );
 
+    const controls = (
+        <>
             <View style={styles.sliderWrapper}>
                 <ThemeText>{t("setCustomTheme.blur")}</ThemeText>
                 <Slider
@@ -214,6 +220,28 @@ export default function Body() {
                     </View>
                 ))}
             </View>
+        </>
+    );
+
+    if (orientation === "horizontal") {
+        return (
+            <HorizontalSafeAreaView style={globalStyle.flex1}>
+                <ResponsiveSplitView
+                    primary={<ScrollView style={styles.previewPane}>{preview}</ScrollView>}
+                    secondary={
+                        <ScrollView style={styles.controlsPane}>
+                            {controls}
+                        </ScrollView>
+                    }
+                />
+            </HorizontalSafeAreaView>
+        );
+    }
+
+    return (
+        <ScrollView style={globalStyle.fwflex1}>
+            {preview}
+            {controls}
         </ScrollView>
     );
 }
@@ -222,6 +250,16 @@ const styles = StyleSheet.create({
     container: {
         width: "100%",
         flex: 1,
+    },
+    previewPane: {
+        flex: 1,
+        minWidth: 0,
+        paddingHorizontal: rpx(12),
+    },
+    controlsPane: {
+        flex: 1,
+        minWidth: 0,
+        paddingVertical: rpx(12),
     },
     image: {
         marginTop: rpx(36),

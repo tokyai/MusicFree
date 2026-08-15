@@ -13,6 +13,7 @@ import Theme from "@/core/theme";
 import HomeBody from "./components/homeBody";
 import HomeBodyHorizontal from "./components/homeBodyHorizontal";
 import useOrientation from "@/hooks/useOrientation";
+import rpx from "@/utils/rpx";
 
 function Home() {
     const orientation = useOrientation();
@@ -61,12 +62,15 @@ function HomeStatusBar() {
 
 const LeftDrawer = createDrawerNavigator();
 export default function App() {
+    const orientation = useOrientation();
+
     return (
         <LeftDrawer.Navigator
             screenOptions={{
                 headerShown: false,
                 drawerStyle: {
-                    width: "80%",
+                    width:
+                        orientation === "horizontal" ? rpx(620) : "80%",
                 },
             }}
             initialRouteName="HOME-MAIN"

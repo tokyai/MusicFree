@@ -1,19 +1,19 @@
-import React, { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
-import rpx from "@/utils/rpx";
+import React, {useEffect} from 'react';
+import {StyleSheet, View} from 'react-native';
+import rpx from '@/utils/rpx';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
     withTiming,
-} from "react-native-reanimated";
-import { useAtomValue } from "jotai";
-import { scrollToTopAtom } from "../store/atoms";
-import ThemeText from "@/components/base/themeText";
-import Tag from "@/components/base/tag";
-import { useParams } from "@/core/router";
-import Image from "@/components/base/image";
-import { ImgAsset } from "@/constants/assetsConst";
-import { useI18N } from "@/core/i18n";
+} from 'react-native-reanimated';
+import {useAtomValue} from 'jotai';
+import {scrollToTopAtom} from '../store/atoms';
+import ThemeText from '@/components/base/themeText';
+import Tag from '@/components/base/tag';
+import {useParams} from '@/core/router';
+import Image from '@/components/base/image';
+import {ImgAsset} from '@/constants/assetsConst';
+import {useI18N} from '@/core/i18n';
 
 const headerHeight = rpx(350);
 
@@ -22,15 +22,15 @@ interface IHeaderProps {
 }
 
 export default function Header(props: IHeaderProps) {
-    const { neverFold } = props;
+    const {neverFold} = props;
 
-    const { artistItem } = useParams<"artist-detail">();
+    const {artistItem} = useParams<'artist-detail'>();
 
     const heightValue = useSharedValue(headerHeight);
     const opacityValue = useSharedValue(1);
     const scrollToTopState = useAtomValue(scrollToTopAtom);
 
-    const { t } = useI18N();
+    const {t} = useI18N();
 
     const heightStyle = useAnimatedStyle(() => {
         return {
@@ -39,7 +39,7 @@ export default function Header(props: IHeaderProps) {
         };
     });
 
-    const avatar = artistItem.avatar?.startsWith("//")
+    const avatar = artistItem.avatar?.startsWith('//')
         ? `https:${artistItem.avatar}`
         : artistItem.avatar;
 
@@ -74,7 +74,7 @@ export default function Header(props: IHeaderProps) {
                             style={styles.titleText}
                             numberOfLines={1}
                             ellipsizeMode="tail">
-                            {artistItem?.name ?? ""}
+                            {artistItem?.name ?? ''}
                         </ThemeText>
                         {artistItem.platform ? (
                             <Tag tagName={artistItem.platform} />
@@ -85,7 +85,7 @@ export default function Header(props: IHeaderProps) {
                         <ThemeText
                             fontSize="subTitle"
                             fontColor="textSecondary">
-                            {t("artistDetail.fansCount", {
+                            {t('artistDetail.fansCount', {
                                 count: artistItem.fans,
                             })}
                         </ThemeText>
@@ -99,7 +99,7 @@ export default function Header(props: IHeaderProps) {
                 ellipsizeMode="tail"
                 fontColor="textSecondary"
                 fontSize="description">
-                {artistItem?.description ?? ""}
+                {artistItem?.description ?? ''}
             </ThemeText>
         </Animated.View>
     );
@@ -107,9 +107,9 @@ export default function Header(props: IHeaderProps) {
 
 const styles = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: '100%',
         height: headerHeight,
-        backgroundColor: "rgba(28, 28, 28, 0.1)",
+        backgroundColor: 'rgba(28, 28, 28, 0.1)',
         zIndex: 1,
     },
     artist: {
@@ -118,29 +118,31 @@ const styles = StyleSheet.create({
         borderRadius: rpx(16),
     },
     headerWrapper: {
-        width: rpx(750),
+        width: '100%',
         paddingTop: rpx(24),
         paddingHorizontal: rpx(24),
         height: rpx(240),
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     info: {
         marginLeft: rpx(24),
-        justifyContent: "space-around",
+        justifyContent: 'space-around',
         height: rpx(144),
+        flex: 1,
+        minWidth: 0,
     },
     title: {
-        flexDirection: "row",
-        alignItems: "center",
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     titleText: {
         marginRight: rpx(18),
-        maxWidth: rpx(400),
+        flexShrink: 1,
     },
     description: {
         marginTop: rpx(24),
-        width: rpx(750),
+        width: '100%',
         paddingHorizontal: rpx(24),
     },
 });

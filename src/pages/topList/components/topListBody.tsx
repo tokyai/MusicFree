@@ -8,6 +8,9 @@ import BoardPanelWrapper from "./boardPanelWrapper";
 import useColors from "@/hooks/useColors";
 import NoPlugin from "@/components/base/noPlugin";
 import i18n from "@/core/i18n";
+import useOrientation from "@/hooks/useOrientation";
+import LandscapeNavigationRail from "@/components/base/landscapeNavigationRail";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 
 export default function TopListBody() {
     const routes = PluginManager.getSortedPluginsWithAbility("getTopLists").map(_ => ({
@@ -16,6 +19,7 @@ export default function TopListBody() {
     }));
     const [index, setIndex] = useState(0);
     const colors = useColors();
+    const orientation = useOrientation();
 
     const renderScene = useCallback(
         (props: { route: { key: string } }) => (
@@ -25,6 +29,41 @@ export default function TopListBody() {
     );
     if (!routes?.length) {
         return <NoPlugin notSupportType={i18n.t("topList.title")} />;
+    }
+
+    const activeRoute = routes[index] ?? routes[0];
+
+    if (orientation === "horizontal") {
+        return (
+            <ResponsiveSplitView
+                primary={
+                    <LandscapeNavigationRail
+                        sections={[
+                            {
+                                key: "sources",
+                                title: i18n.t("common.source"),
+                                items: routes,
+                                selectedKey: activeRoute.key,
+                                onSelect: key => {
+                                    const nextIndex = routes.findIndex(
+                                        route => route.key === key,
+                                    );
+                                    if (nextIndex >= 0) {
+                                        setIndex(nextIndex);
+                                    }
+                                },
+                            },
+                        ]}
+                    />
+                }
+                secondary={
+                    <BoardPanelWrapper
+                        key={activeRoute.key}
+                        hash={activeRoute.key}
+                    />
+                }
+            />
+        );
     }
 
     return (

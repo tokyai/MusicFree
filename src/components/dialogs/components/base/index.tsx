@@ -22,6 +22,7 @@ import Divider from "@/components/base/divider";
 import { fontSizeConst } from "@/constants/uiConst";
 import { ScrollView } from "react-native-gesture-handler";
 import useOrientation from "@/hooks/useOrientation.ts";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface IDialogProps {
     onDismiss?: () => void;
@@ -35,6 +36,9 @@ function Dialog(props: IDialogProps) {
     const colors = useColors();
     const backHandlerRef = useRef<NativeEventSubscription>();
     const orientation = useOrientation();
+    const safeAreaInsets = useSafeAreaInsets();
+    const availableHeight =
+        vh(100) - safeAreaInsets.top - safeAreaInsets.bottom - rpx(48);
 
     // 对话框宽度
     const dialogContainerStyle: ViewStyle =
@@ -43,8 +47,10 @@ function Dialog(props: IDialogProps) {
                 width: vw(100) - rpx(72),
             }
             : {
-                width: "80%",
+                width: "70%",
+                maxWidth: rpx(960),
             };
+    dialogContainerStyle.maxHeight = availableHeight;
 
     useEffect(() => {
         sharedShowValue.value = 1;
@@ -152,6 +158,18 @@ interface IDialogContentProps {
 
 function Content(props: IDialogContentProps) {
     const { children, style, needScroll } = props;
+    const orientation = useOrientation();
+    const safeAreaInsets = useSafeAreaInsets();
+    const maxContentHeight =
+        orientation === "horizontal"
+            ? Math.max(
+                rpx(160),
+                vh(100) -
+                      safeAreaInsets.top -
+                      safeAreaInsets.bottom -
+                      rpx(224),
+            )
+            : vh(50);
 
     const content =
         typeof children === "string" ? (
@@ -167,7 +185,7 @@ function Content(props: IDialogContentProps) {
             style={[
                 styles.contentContainer,
                 {
-                    maxHeight: vh(50),
+                    maxHeight: maxContentHeight,
                 },
                 style,
             ]}>

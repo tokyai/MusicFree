@@ -8,10 +8,11 @@ interface IMusicResultsProps {
     item: IMusic.IMusicItem;
     index: number;
     pluginSearchResultRef: React.MutableRefObject<ISearchResult<"music">>;
+    tableMode?: boolean;
 }
 
 export default function MusicResultItem(props: IMusicResultsProps) {
-    const { item: musicItem, pluginSearchResultRef } = props;
+    const { item: musicItem, pluginSearchResultRef, tableMode } = props;
 
     return (
         <MusicItem
@@ -31,6 +32,7 @@ export default function MusicResultItem(props: IMusicResultsProps) {
                     TrackPlayer.play(musicItem);
                 }
             }}
+            tableMode={tableMode}
         />
     );
 }

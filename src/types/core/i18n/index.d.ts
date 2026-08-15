@@ -30,6 +30,8 @@ export interface ILanguageData {
     "common.confirm": string; // 确认
     "common.view": string; // 查看
     "common.open": string; // 打开
+    "common.source": string; // 音源
+    "common.mediaType": string; // 媒体类型
     "common.username": string; // 用户名
     "common.password": string; // 密码
     "common.cover": string; // 封面

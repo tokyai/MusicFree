@@ -12,6 +12,7 @@ import rpx from "@/utils/rpx";
 import React, { useState } from "react";
 import { StyleSheet } from "react-native";
 import SearchResult from "./searchResult";
+import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView";
 
 function filterMusic(query: string, musicList: IMusic.IMusicItem[]) {
     if (query?.length === 0) {
@@ -54,7 +55,9 @@ export default function SearchMusicList() {
                     onChangeText={onChangeSearch}
                 />
             </AppBar>
-            <SearchResult result={result} musicSheet={musicSheet} />
+            <HorizontalSafeAreaView style={globalStyle.flex1}>
+                <SearchResult result={result} musicSheet={musicSheet} />
+            </HorizontalSafeAreaView>
             <MusicBar />
         </VerticalSafeAreaView>
     );

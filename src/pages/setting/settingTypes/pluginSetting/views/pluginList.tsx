@@ -17,6 +17,9 @@ import { showDialog } from "@/components/dialogs/useDialog";
 import { showPanel } from "@/components/panels/usePanel";
 import AppBar from "@/components/base/appBar";
 import Fab from "@/components/base/fab";
+import IconTextButton from "@/components/base/iconTextButton";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
+import useOrientation from "@/hooks/useOrientation";
 import PluginItem from "../components/pluginItem";
 import { IIconName } from "@/components/base/icon.tsx";
 import { IInstallPluginResult } from "@/types/core/pluginManager";
@@ -35,6 +38,7 @@ export default function PluginList() {
     const [loading, setLoading] = useState(false);
 
     const navigator = useNavigation<any>();
+    const orientation = useOrientation();
 
     const menuOptions: IOption[] = [
         {
@@ -264,66 +268,88 @@ export default function PluginList() {
         setLoading(false);
     }
 
+    const openInstallOptions = () => {
+        showPanel("SimpleSelect", {
+            header: t("pluginSetting.menu.installPlugin"),
+            candidates: [
+                {
+                    value: "从本地安装插件",
+                    title: t("pluginSetting.fabOptions.installFromLocal"),
+                },
+                {
+                    value: "从网络安装插件",
+                    title: t("pluginSetting.fabOptions.installFromNetwork"),
+                },
+                {
+                    value: "更新全部插件",
+                    title: t("pluginSetting.fabOptions.updateAllPlugins"),
+                },
+                {
+                    value: "更新订阅",
+                    title: t("pluginSetting.fabOptions.updateSubscription"),
+                },
+            ],
+            onPress(item) {
+                if (item.value === "从本地安装插件") {
+                    onInstallFromLocalClick();
+                } else if (item.value === "从网络安装插件") {
+                    onInstallFromNetworkClick();
+                } else if (item.value === "更新订阅") {
+                    onSubscribeClick();
+                } else if (item.value === "更新全部插件") {
+                    onUpdateAllClick();
+                }
+            },
+        });
+    };
+
+    const pluginList = (
+        <HorizontalSafeAreaView style={style.wrapper}>
+            {loading ? (
+                <Loading />
+            ) : (
+                <FlatList
+                    ListEmptyComponent={Empty}
+                    ListFooterComponent={<View style={style.blank} />}
+                    data={plugins ?? []}
+                    keyExtractor={_ => _.hash}
+                    renderItem={({ item: plugin }) => (
+                        <PluginItem key={plugin.hash} plugin={plugin} />
+                    )}
+                />
+            )}
+        </HorizontalSafeAreaView>
+    );
+
+    if (orientation === "horizontal") {
+        return (
+            <>
+                <AppBar menu={menuOptions}>
+                    {t("sidebar.pluginManagement")}
+                </AppBar>
+                <ResponsiveSplitView
+                    primary={pluginList}
+                    secondary={
+                        <View style={style.actionRail}>
+                            <IconTextButton
+                                icon="plus"
+                                onPress={openInstallOptions}>
+                                {t("pluginSetting.menu.installPlugin")}
+                            </IconTextButton>
+                        </View>
+                    }
+                    primaryWeight={62}
+                    secondaryWeight={38}
+                />
+            </>
+        );
+    }
+
     return (
         <>
             <AppBar menu={menuOptions}>{t("sidebar.pluginManagement")}</AppBar>
-            <HorizontalSafeAreaView style={style.wrapper}>
-                <>
-                    {loading ? (
-                        <Loading />
-                    ) : (
-                        <FlatList
-                            ListEmptyComponent={Empty}
-                            ListFooterComponent={<View style={style.blank} />}
-                            data={plugins ?? []}
-                            keyExtractor={_ => _.hash}
-                            renderItem={({ item: plugin }) => (
-                                <PluginItem key={plugin.hash} plugin={plugin} />
-                            )}
-                        />
-                    )}
-
-                    <Fab
-                        icon="plus"
-                        onPress={() => {
-                            showPanel("SimpleSelect", {
-                                header: t("pluginSetting.menu.installPlugin"),
-                                candidates: [
-                                    {
-                                        value: "从本地安装插件",
-                                        title: t("pluginSetting.fabOptions.installFromLocal"),
-                                    },
-                                    {
-                                        value: "从网络安装插件",
-                                        title: t("pluginSetting.fabOptions.installFromNetwork"),
-                                    },
-                                    {
-                                        value: "更新全部插件",
-                                        title: t("pluginSetting.fabOptions.updateAllPlugins"),
-                                    },
-                                    {
-                                        value: "更新订阅",
-                                        title: t("pluginSetting.fabOptions.updateSubscription"),
-                                    },
-                                ],
-                                onPress(item) {
-                                    if (item.value === "从本地安装插件") {
-                                        onInstallFromLocalClick();
-                                    } else if (
-                                        item.value === "从网络安装插件"
-                                    ) {
-                                        onInstallFromNetworkClick();
-                                    } else if (item.value === "更新订阅") {
-                                        onSubscribeClick();
-                                    } else if (item.value === "更新全部插件") {
-                                        onUpdateAllClick();
-                                    }
-                                },
-                            });
-                        }}
-                    />
-                </>
-            </HorizontalSafeAreaView>
+            {pluginList}
+            <Fab icon="plus" onPress={openInstallOptions} />
         </>
     );
 }
@@ -335,6 +361,10 @@ const style = StyleSheet.create({
     },
     blank: {
         height: rpx(200),
+    },
+    actionRail: {
+        flex: 1,
+        padding: rpx(24),
     },
 });
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, useWindowDimensions } from "react-native";
 import rpx from "@/utils/rpx";
 import { SceneMap, TabBar, TabView } from "react-native-tab-view";
 import { fontWeightConst } from "@/constants/uiConst";
@@ -9,6 +9,7 @@ import { queryResultAtom } from "../store/atoms";
 import content from "./content";
 import useColors from "@/hooks/useColors";
 import { useI18N } from "@/core/i18n";
+import useOrientation from "@/hooks/useOrientation";
 
 const sceneMap: Record<string, React.FC> = {
     album: BodyContentWrapper,
@@ -32,6 +33,8 @@ export default function Body() {
     const [index, setIndex] = useState(0);
     const colors = useColors();
     const { t } = useI18N();
+    const orientation = useOrientation();
+    const { width } = useWindowDimensions();
 
     return (
         <TabView
@@ -70,7 +73,9 @@ export default function Body() {
             )}
             renderScene={SceneMap(sceneMap)}
             onIndexChange={setIndex}
-            initialLayout={{ width: rpx(750) }}
+            initialLayout={{
+                width: orientation === "horizontal" ? width * 0.62 : width,
+            }}
         />
     );
 }
@@ -78,10 +83,15 @@ export default function Body() {
 export function BodyContentWrapper(props: any) {
     const tab: IArtist.ArtistMediaType = props.route.key;
     const queryResult = useAtomValue(queryResultAtom);
+    const orientation = useOrientation();
 
     const Component = content[tab];
     const renderItem = ({ item, index }: any) => (
-        <Component item={item} index={index} />
+        <Component
+            item={item}
+            index={index}
+            tableMode={tab === "music" && orientation === "horizontal"}
+        />
     );
 
     return (

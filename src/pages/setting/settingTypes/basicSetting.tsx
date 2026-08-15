@@ -22,9 +22,18 @@ import Toast from "@/utils/toast";
 import Clipboard from "@react-native-clipboard/clipboard";
 import Slider from "@react-native-community/slider";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { SectionList, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+    SectionList,
+    StyleSheet,
+    TouchableOpacity,
+    View,
+    ViewToken,
+} from "react-native";
 import { readdir } from "react-native-fs";
 import { FlatList, ScrollView } from "react-native-gesture-handler";
+import useOrientation from "@/hooks/useOrientation";
+import LandscapeNavigationRail from "@/components/base/landscapeNavigationRail";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 
 function createSwitch(
     title: string,
@@ -143,7 +152,52 @@ export default function BasicSetting() {
     const [cacheSize, refreshCacheSize] = useCacheSize();
 
     const sectionListRef = useRef<SectionList | null>(null);
-    // const titleListRef = useRef<FlatList | null>(null);
+    const basicOptionsRef = useRef<Array<{ title: string }>>([]);
+    const pendingSectionIndexRef = useRef<number | null>(null);
+    const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+    const orientation = useOrientation();
+
+    const scrollToSection = useCallback((sectionIndex: number) => {
+        pendingSectionIndexRef.current = sectionIndex;
+        setActiveSectionIndex(sectionIndex);
+        sectionListRef.current?.scrollToLocation({
+            animated: true,
+            sectionIndex,
+            itemIndex: 0,
+        });
+    }, []);
+
+    const onViewableItemsChangedRef = useRef(
+        ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+            const visibleSection = viewableItems.find(
+                item => item.section,
+            )?.section;
+            if (!visibleSection) {
+                return;
+            }
+            const sectionIndex = basicOptionsRef.current.findIndex(
+                option => option.title === visibleSection.title,
+            );
+            if (sectionIndex < 0) {
+                return;
+            }
+
+            const pendingSectionIndex = pendingSectionIndexRef.current;
+            if (
+                pendingSectionIndex !== null &&
+                sectionIndex !== pendingSectionIndex
+            ) {
+                return;
+            }
+            if (sectionIndex === pendingSectionIndex) {
+                pendingSectionIndexRef.current = null;
+            }
+            setActiveSectionIndex(sectionIndex);
+        },
+    );
+    const viewabilityConfigRef = useRef({
+        itemVisiblePercentThreshold: 50,
+    });
 
     useEffect(() => {
         refreshCacheSize();
@@ -572,6 +626,71 @@ export default function BasicSetting() {
         },
     ];
 
+    basicOptionsRef.current = basicOptions;
+
+    const settingList = (
+        <SectionList
+            sections={basicOptions}
+            renderSectionHeader={({ section }) => (
+                <View style={styles.sectionHeader}>
+                    <ThemeText
+                        fontSize="subTitle"
+                        fontColor="textSecondary"
+                        fontWeight="bold">
+                        {section.title}
+                    </ThemeText>
+                </View>
+            )}
+            ref={sectionListRef}
+            renderSectionFooter={({ section }) => {
+                return section.footer ?? null;
+            }}
+            renderItem={({ item }) => {
+                const Right = item.right;
+
+                return (
+                    <ListItem
+                        withHorizontalPadding
+                        heightType="small"
+                        onPress={item.onPress}>
+                        <ListItem.Content title={item.title} />
+                        {Right}
+                    </ListItem>
+                );
+            }}
+            onScrollBeginDrag={() => {
+                pendingSectionIndexRef.current = null;
+            }}
+            onViewableItemsChanged={onViewableItemsChangedRef.current}
+            viewabilityConfig={viewabilityConfigRef.current}
+        />
+    );
+
+    if (orientation === "horizontal") {
+        return (
+            <ResponsiveSplitView
+                primary={
+                    <LandscapeNavigationRail
+                        sections={[
+                            {
+                                key: "setting-sections",
+                                items: basicOptions.map((section, index) => ({
+                                    key: String(index),
+                                    title: section.title,
+                                })),
+                                selectedKey: String(activeSectionIndex),
+                                onSelect: key => {
+                                    scrollToSection(Number(key));
+                                },
+                            },
+                        ]}
+                    />
+                }
+                secondary={settingList}
+            />
+        );
+    }
+
     return (
         <View style={styles.wrapper}>
             <FlatList
@@ -583,10 +702,7 @@ export default function BasicSetting() {
                 renderItem={({ item, index }) => (
                     <TouchableOpacity
                         onPress={() => {
-                            sectionListRef.current?.scrollToLocation({
-                                sectionIndex: index,
-                                itemIndex: 0,
-                            });
+                            scrollToSection(index);
                         }}
                         activeOpacity={0.7}
                         style={styles.headerItemStyle}>
@@ -594,36 +710,7 @@ export default function BasicSetting() {
                     </TouchableOpacity>
                 )}
             />
-            <SectionList
-                sections={basicOptions}
-                renderSectionHeader={({ section }) => (
-                    <View style={styles.sectionHeader}>
-                        <ThemeText
-                            fontSize="subTitle"
-                            fontColor="textSecondary"
-                            fontWeight="bold">
-                            {section.title}
-                        </ThemeText>
-                    </View>
-                )}
-                ref={sectionListRef}
-                renderSectionFooter={({ section }) => {
-                    return section.footer ?? null;
-                }}
-                renderItem={({ item }) => {
-                    const Right = item.right;
-
-                    return (
-                        <ListItem
-                            withHorizontalPadding
-                            heightType="small"
-                            onPress={item.onPress}>
-                            <ListItem.Content title={item.title} />
-                            {Right}
-                        </ListItem>
-                    );
-                }}
-            />
+            {settingList}
         </View>
     );
 }

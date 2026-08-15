@@ -6,6 +6,7 @@ import globalStyle from "@/constants/globalStyle";
 import { useI18N } from "@/core/i18n";
 import React from "react";
 import Body from "./components/body";
+import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView";
 
 export default function RecommendSheets() {
     const { t } = useI18N();
@@ -14,7 +15,9 @@ export default function RecommendSheets() {
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
             <StatusBar />
             <AppBar>{t("recommendSheet.title")}</AppBar>
-            <Body />
+            <HorizontalSafeAreaView style={globalStyle.flex1}>
+                <Body />
+            </HorizontalSafeAreaView>
             <MusicBar />
         </VerticalSafeAreaView>
     );

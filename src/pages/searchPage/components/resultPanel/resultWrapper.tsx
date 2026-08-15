@@ -54,6 +54,7 @@ function ResultWrapper(props: IResultWrapperProps) {
             pluginHash={pluginHash}
             pluginSearchResultRef={pluginSearchResultRef}
             tableMode={tab === "music" && orientation === "horizontal"}
+            compactTable={tab === "music" && orientation === "horizontal"}
         />
     );
 

@@ -22,9 +22,10 @@ interface IMusicEditorItemProps {
     index: number;
     editorMusicItem: IEditorMusicItem;
     tableMode?: boolean;
+    compactTable?: boolean;
 }
 function _MusicEditorItem(props: IMusicEditorItemProps) {
-    const { index, editorMusicItem, tableMode } = props;
+    const { index, editorMusicItem, tableMode, compactTable } = props;
     const setEditingMusicList = useSetAtom(editingMusicListAtom);
 
     const onPress = useCallback(() => {
@@ -47,6 +48,7 @@ function _MusicEditorItem(props: IMusicEditorItemProps) {
             itemPaddingRight={rpx(100)}
             onItemPress={onPress}
             tableMode={tableMode}
+            compactTable={compactTable}
         />
     );
 }
@@ -56,7 +58,8 @@ const MusicEditorItem = memo(
     (prev, curr) =>
         prev.editorMusicItem === curr.editorMusicItem &&
         prev.index === curr.index &&
-        prev.tableMode === curr.tableMode,
+        prev.tableMode === curr.tableMode &&
+        prev.compactTable === curr.compactTable,
 );
 
 /** 音乐列表 */
@@ -74,6 +77,7 @@ export default function MusicList() {
                     editorMusicItem={item}
                     index={index!}
                     tableMode={orientation === "horizontal"}
+                    compactTable={orientation === "horizontal"}
                 />
             );
         },

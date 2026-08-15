@@ -2,7 +2,7 @@
  * 搜索结果面板 一级页
  */
 import React, { memo, useCallback, useState } from "react";
-import { Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import rpx, { vw } from "@/utils/rpx";
 import { TabBar, TabView } from "react-native-tab-view";
 import ResultSubPanel, { SearchPluginResult } from "./resultSubPanel";
@@ -89,12 +89,14 @@ function ResultPanel() {
                 }
                 secondary={
                     activePluginRoute ? (
-                        <SearchPluginResult
-                            key={`${activeRoute.key}-${activePluginRoute.key}`}
-                            tab={activeRoute.key}
-                            pluginHash={activePluginRoute.key}
-                            pluginName={activePluginRoute.title}
-                        />
+                        <View style={styles.resultPane}>
+                            <SearchPluginResult
+                                key={`${activeRoute.key}-${activePluginRoute.key}`}
+                                tab={activeRoute.key}
+                                pluginHash={activePluginRoute.key}
+                                pluginName={activePluginRoute.title}
+                            />
+                        </View>
                     ) : (
                         <Empty />
                     )
@@ -160,3 +162,10 @@ function ResultPanel() {
 }
 
 export default memo(ResultPanel);
+
+const styles = StyleSheet.create({
+    resultPane: {
+        flex: 1,
+        minWidth: 0,
+    },
+});

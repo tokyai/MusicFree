@@ -97,7 +97,9 @@ function SheetBody(props: IProps) {
             <ResponsiveSplitView
                 primary={<LandscapeNavigationRail sections={sections} />}
                 secondary={
-                    <SheetList tag={selectedTag} pluginHash={hash} />
+                    <View style={globalStyle.flex1}>
+                        <SheetList tag={selectedTag} pluginHash={hash} />
+                    </View>
                 }
             />
         );

@@ -91,6 +91,7 @@ export function BodyContentWrapper(props: any) {
             item={item}
             index={index}
             tableMode={tab === "music" && orientation === "horizontal"}
+            compactTable={tab === "music" && orientation === "horizontal"}
         />
     );
 

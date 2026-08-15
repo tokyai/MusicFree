@@ -90,7 +90,7 @@ export default function PluginSubscribe() {
     };
 
     const subscribeList = (
-        <HorizontalSafeAreaView style={globalStyle.flex1}>
+        <View style={globalStyle.flex1}>
             <FlatList
                 style={style.listWrapper}
                 ListEmptyComponent={Empty}
@@ -147,27 +147,29 @@ export default function PluginSubscribe() {
                     index,
                 })}
             />
-        </HorizontalSafeAreaView>
+        </View>
     );
 
     if (orientation === "horizontal") {
         return (
             <>
                 <AppBar>{t("pluginSetting.menu.subscriptionSetting")}</AppBar>
-                <ResponsiveSplitView
-                    primary={subscribeList}
-                    secondary={
-                        <View style={style.actionRail}>
-                            <IconTextButton
-                                icon="plus"
-                                onPress={openAddDialog}>
-                                {t("pluginSetting.menu.subscriptionSetting")}
-                            </IconTextButton>
-                        </View>
-                    }
-                    primaryWeight={62}
-                    secondaryWeight={38}
-                />
+                <HorizontalSafeAreaView style={globalStyle.flex1}>
+                    <ResponsiveSplitView
+                        primary={subscribeList}
+                        secondary={
+                            <View style={style.actionRail}>
+                                <IconTextButton
+                                    icon="plus"
+                                    onPress={openAddDialog}>
+                                    {t("pluginSetting.menu.subscriptionSetting")}
+                                </IconTextButton>
+                            </View>
+                        }
+                        primaryWeight={62}
+                        secondaryWeight={38}
+                    />
+                </HorizontalSafeAreaView>
             </>
         );
     }
@@ -175,7 +177,9 @@ export default function PluginSubscribe() {
     return (
         <>
             <AppBar>{t("pluginSetting.menu.subscriptionSetting")}</AppBar>
-            {subscribeList}
+            <HorizontalSafeAreaView style={globalStyle.flex1}>
+                {subscribeList}
+            </HorizontalSafeAreaView>
             <Fab
                 icon="plus"
                 onPress={openAddDialog}

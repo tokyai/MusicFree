@@ -35,6 +35,10 @@ export default function LandscapeNavigationRail(
 ) {
     const { sections, style } = props;
     const colors = useColors();
+    const selectedItemStyle: ViewStyle = {
+        backgroundColor: colors.card,
+        borderLeftColor: colors.primary,
+    };
 
     return (
         <ScrollView
@@ -71,14 +75,9 @@ export default function LandscapeNavigationRail(
                                 onPress={() => section.onSelect(item.key)}
                                 style={[
                                     styles.item,
-                                    {
-                                        backgroundColor: selected
-                                            ? colors.card
-                                            : "transparent",
-                                        borderLeftColor: selected
-                                            ? colors.primary
-                                            : "transparent",
-                                    },
+                                    selected
+                                        ? selectedItemStyle
+                                        : styles.unselectedItem,
                                     item.disabled ? styles.disabled : null,
                                 ]}>
                                 <ThemeText
@@ -124,6 +123,10 @@ const styles = StyleSheet.create({
         paddingVertical: rpx(14),
         justifyContent: "center",
         marginBottom: rpx(8),
+    },
+    unselectedItem: {
+        backgroundColor: "transparent",
+        borderLeftColor: "transparent",
     },
     disabled: {
         opacity: 0.45,

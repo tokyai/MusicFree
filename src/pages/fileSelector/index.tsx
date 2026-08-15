@@ -286,29 +286,40 @@ export default function FileSelector() {
         </View>
     );
 
+    const header = (
+        <View style={[style.header, { backgroundColor: colors.appBar }]}>
+            <IconButton
+                sizeType="small"
+                name="arrow-long-left"
+                color={colors.appBarText}
+                onPress={() => {
+                    // 返回上一级
+                    if (currentPath.parent !== null) {
+                        setCurrentPath(currentPath.parent);
+                    }
+                }}
+            />
+            <ThemeText
+                numberOfLines={2}
+                ellipsizeMode="head"
+                fontColor={"appBarText"}
+                style={style.headerPath}>
+                {currentPath.path}
+            </ThemeText>
+        </View>
+    );
+
     return (
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
             <StatusBar />
-            <View style={[style.header, { backgroundColor: colors.appBar }]}>
-                <IconButton
-                    sizeType="small"
-                    name="arrow-long-left"
-                    color={colors.appBarText}
-                    onPress={() => {
-                        // 返回上一级
-                        if (currentPath.parent !== null) {
-                            setCurrentPath(currentPath.parent);
-                        }
-                    }}
-                />
-                <ThemeText
-                    numberOfLines={2}
-                    ellipsizeMode="head"
-                    fontColor={"appBarText"}
-                    style={style.headerPath}>
-                    {currentPath.path}
-                </ThemeText>
-            </View>
+            {orientation === "horizontal" ? (
+                <HorizontalSafeAreaView
+                    style={{ backgroundColor: colors.appBar }}>
+                    {header}
+                </HorizontalSafeAreaView>
+            ) : (
+                header
+            )}
             {orientation === "horizontal" ? (
                 <HorizontalSafeAreaView style={globalStyle.flex1}>
                     <ResponsiveSplitView

@@ -1,17 +1,17 @@
-import React from 'react';
-import Header from './header';
-import MusicList from '@/components/musicList';
-import {useParams} from '@/core/router';
-import HorizontalSafeAreaView from '@/components/base/horizontalSafeAreaView.tsx';
-import globalStyle from '@/constants/globalStyle';
-import {useSheetItem} from '@/core/musicSheet';
-import {RequestStateCode} from '@/constants/commonConst';
-import {useCurrentMusic} from '@/core/trackPlayer';
-import useOrientation from '@/hooks/useOrientation';
-import ResponsiveSplitView from '@/components/base/responsiveSplitView';
+import React from "react";
+import Header from "./header";
+import MusicList from "@/components/musicList";
+import { useParams } from "@/core/router";
+import HorizontalSafeAreaView from "@/components/base/horizontalSafeAreaView.tsx";
+import globalStyle from "@/constants/globalStyle";
+import { useSheetItem } from "@/core/musicSheet";
+import { RequestStateCode } from "@/constants/commonConst";
+import { useCurrentMusic } from "@/core/trackPlayer";
+import useOrientation from "@/hooks/useOrientation";
+import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 
 export default function SheetMusicList() {
-    const {id = 'favorite'} = useParams<'local-sheet-detail'>();
+    const { id = "favorite" } = useParams<"local-sheet-detail">();
     const musicSheet = useSheetItem(id);
     const currentMusic = useCurrentMusic();
     const orientation = useOrientation();
@@ -29,7 +29,7 @@ export default function SheetMusicList() {
 
     return (
         <HorizontalSafeAreaView style={globalStyle.flex1}>
-            {orientation === 'horizontal' ? (
+            {orientation === "horizontal" ? (
                 <ResponsiveSplitView
                     primary={<Header landscape />}
                     secondary={musicList}

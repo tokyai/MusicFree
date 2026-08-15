@@ -304,7 +304,7 @@ export default function PluginList() {
     };
 
     const pluginList = (
-        <HorizontalSafeAreaView style={style.wrapper}>
+        <View style={style.wrapper}>
             {loading ? (
                 <Loading />
             ) : (
@@ -318,7 +318,7 @@ export default function PluginList() {
                     )}
                 />
             )}
-        </HorizontalSafeAreaView>
+        </View>
     );
 
     if (orientation === "horizontal") {
@@ -327,20 +327,22 @@ export default function PluginList() {
                 <AppBar menu={menuOptions}>
                     {t("sidebar.pluginManagement")}
                 </AppBar>
-                <ResponsiveSplitView
-                    primary={pluginList}
-                    secondary={
-                        <View style={style.actionRail}>
-                            <IconTextButton
-                                icon="plus"
-                                onPress={openInstallOptions}>
-                                {t("pluginSetting.menu.installPlugin")}
-                            </IconTextButton>
-                        </View>
-                    }
-                    primaryWeight={62}
-                    secondaryWeight={38}
-                />
+                <HorizontalSafeAreaView style={style.wrapper}>
+                    <ResponsiveSplitView
+                        primary={pluginList}
+                        secondary={
+                            <View style={style.actionRail}>
+                                <IconTextButton
+                                    icon="plus"
+                                    onPress={openInstallOptions}>
+                                    {t("pluginSetting.menu.installPlugin")}
+                                </IconTextButton>
+                            </View>
+                        }
+                        primaryWeight={62}
+                        secondaryWeight={38}
+                    />
+                </HorizontalSafeAreaView>
             </>
         );
     }
@@ -348,7 +350,9 @@ export default function PluginList() {
     return (
         <>
             <AppBar menu={menuOptions}>{t("sidebar.pluginManagement")}</AppBar>
-            {pluginList}
+            <HorizontalSafeAreaView style={style.wrapper}>
+                {pluginList}
+            </HorizontalSafeAreaView>
             <Fab icon="plus" onPress={openInstallOptions} />
         </>
     );

@@ -86,7 +86,6 @@ export default function MusicItem(props: IMusicItemProps) {
                         <TitleAndTag
                             title={musicItem.title}
                             titleFontColor={highlight ? "primary" : "text"}
-                            tag={musicItem.platform}
                         />
                     }
                 />
@@ -129,6 +128,7 @@ export default function MusicItem(props: IMusicItemProps) {
                 {showMoreIcon ? (
                     <ListItem.ListItemIcon
                         width={rpx(48)}
+                        fixedWidth
                         position="none"
                         icon="ellipsis-vertical"
                         onPress={handleMorePress}

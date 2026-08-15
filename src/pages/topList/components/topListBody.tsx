@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import rpx from "@/utils/rpx";
 import PluginManager from "@/core/pluginManager";
 import { TabBar, TabView } from "react-native-tab-view";
@@ -57,10 +57,12 @@ export default function TopListBody() {
                     />
                 }
                 secondary={
-                    <BoardPanelWrapper
-                        key={activeRoute.key}
-                        hash={activeRoute.key}
-                    />
+                    <View style={styles.resultPane}>
+                        <BoardPanelWrapper
+                            key={activeRoute.key}
+                            hash={activeRoute.key}
+                        />
+                    </View>
                 }
             />
         );
@@ -116,5 +118,9 @@ const styles = StyleSheet.create({
     },
     tabStyle: {
         width: "auto",
+    },
+    resultPane: {
+        flex: 1,
+        minWidth: 0,
     },
 });

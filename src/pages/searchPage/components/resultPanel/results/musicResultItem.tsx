@@ -9,10 +9,16 @@ interface IMusicResultsProps {
     index: number;
     pluginSearchResultRef: React.MutableRefObject<ISearchResult<"music">>;
     tableMode?: boolean;
+    compactTable?: boolean;
 }
 
 export default function MusicResultItem(props: IMusicResultsProps) {
-    const { item: musicItem, pluginSearchResultRef, tableMode } = props;
+    const {
+        item: musicItem,
+        pluginSearchResultRef,
+        tableMode,
+        compactTable,
+    } = props;
 
     return (
         <MusicItem
@@ -33,6 +39,7 @@ export default function MusicResultItem(props: IMusicResultsProps) {
                 }
             }}
             tableMode={tableMode}
+            compactTable={compactTable}
         />
     );
 }

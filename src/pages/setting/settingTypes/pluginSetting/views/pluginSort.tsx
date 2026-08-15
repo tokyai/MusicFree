@@ -56,28 +56,26 @@ export default function PluginSort() {
         return (
             <>
                 <AppBar>{t("pluginSetting.menu.sort")}</AppBar>
-                <ResponsiveSplitView
-                    primary={
-                        <HorizontalSafeAreaView style={globalStyle.flex1}>
-                            {sortableList}
-                        </HorizontalSafeAreaView>
-                    }
-                    secondary={
-                        <View style={style.actionRail}>
-                            <ThemeText fontWeight="bold">
-                                {t("pluginSetting.menu.sort")}
-                            </ThemeText>
-                            <IconTextButton
-                                icon="check"
-                                onPress={saveSorting}
-                                containerStyle={style.actionButton}>
-                                {t("common.done")}
-                            </IconTextButton>
-                        </View>
-                    }
-                    primaryWeight={62}
-                    secondaryWeight={38}
-                />
+                <HorizontalSafeAreaView style={globalStyle.flex1}>
+                    <ResponsiveSplitView
+                        primary={sortableList}
+                        secondary={
+                            <View style={style.actionRail}>
+                                <ThemeText fontWeight="bold">
+                                    {t("pluginSetting.menu.sort")}
+                                </ThemeText>
+                                <IconTextButton
+                                    icon="check"
+                                    onPress={saveSorting}
+                                    containerStyle={style.actionButton}>
+                                    {t("common.done")}
+                                </IconTextButton>
+                            </View>
+                        }
+                        primaryWeight={62}
+                        secondaryWeight={38}
+                    />
+                </HorizontalSafeAreaView>
             </>
         );
     }

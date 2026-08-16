@@ -30,21 +30,6 @@ export interface IPluginManager {
     setup(): Promise<void>;
 
     /**
-     * 从本地文件安装插件
-     * @param pluginPath - 插件文件路径
-     * @param config - 安装配置选项
-     * @param config.notCheckVersion - 为true时跳过版本检查
-     * @param config.useExpoFs - 为true时使用Expo文件系统代替React Native的文件系统
-     * @returns 安装结果，包含成功状态和相关信息
-     */
-    installPluginFromLocalFile(
-        pluginPath: string,
-        config?: IInstallPluginConfig & {
-            useExpoFs?: boolean
-        },
-    ): Promise<IInstallPluginResult>;
-
-    /**
      * 从URL安装插件
      * @param url - 下载插件的URL
      * @param config - 安装配置选项

@@ -13,9 +13,59 @@ import { ResumeMode } from "@/constants/commonConst.ts";
  * }
  */
 
-interface IBackJson {
+export interface IBackJson {
     musicSheets: IMusic.IMusicSheetItem[];
-    plugins: Array<{ srcUrl: string; version: string }>;
+    plugins: Array<{ srcUrl: string; version?: string }>;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null;
+}
+
+/**
+ * Parse and validate a backup payload before any restore side effects run.
+ * The shape intentionally matches the object emitted by backup().
+ */
+export function parseBackupPayload(raw: unknown): IBackJson {
+    let value: unknown = raw;
+    if (typeof raw === "string") {
+        try {
+            value = JSON.parse(raw) as unknown;
+        } catch {
+            throw new Error("备份文件格式无效");
+        }
+    }
+
+    if (!isRecord(value)) {
+        throw new Error("备份文件结构无效");
+    }
+    const musicSheets = value.musicSheets;
+    const plugins = value.plugins;
+    if (!Array.isArray(musicSheets) || !Array.isArray(plugins)) {
+        throw new Error("备份文件缺少歌单或插件数据");
+    }
+    if (
+        !plugins.every(plugin => {
+            if (!isRecord(plugin) || typeof plugin.srcUrl !== "string") {
+                return false;
+            }
+            return plugin.version === undefined || typeof plugin.version === "string";
+        })
+    ) {
+        throw new Error("备份文件中的插件数据无效");
+    }
+    if (
+        !musicSheets.every(
+            musicSheet => isRecord(musicSheet) && typeof musicSheet.id === "string",
+        )
+    ) {
+        throw new Error("备份文件中的歌单数据无效");
+    }
+
+    return {
+        musicSheets: musicSheets as IMusic.IMusicSheetItem[],
+        plugins: plugins as IBackJson["plugins"],
+    };
 }
 
 function backup() {
@@ -36,16 +86,7 @@ async function resume(
     raw: string | Object,
     resumeMode: ResumeMode = ResumeMode.Append,
 ) {
-    let obj: IBackJson;
-    if (typeof raw === "string") {
-        try {
-            obj = JSON.parse(raw);
-        } catch {
-            throw new Error("备份文件格式无效");
-        }
-    } else {
-        obj = raw as IBackJson;
-    }
+    const obj = parseBackupPayload(raw);
 
     const { plugins, musicSheets } = obj ?? {};
     /** 恢复插件 */

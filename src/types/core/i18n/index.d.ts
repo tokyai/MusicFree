@@ -277,6 +277,45 @@ export interface ILanguageData {
     "backupAndResume.webdavUrl": string; // WebDAV URL
     "backupAndResume.backupToWebdav": string; // 备份到WebDAV
     "backupAndResume.resumeFromWebdav": string; // 从WebDAV恢复
+    "backupAndResume.ftpBackup": string; // FTP/FTPS备份
+    "backupAndResume.ftpMode": string; // FTP模式
+    "backupAndResume.ftpMode.ftp": string; // 普通FTP
+    "backupAndResume.ftpMode.ftps": string; // 显式FTPS
+    "backupAndResume.ftpPlainWarning": string; // 明文传输提示
+    "backupAndResume.ftpTlsDescription": string; // TLS说明
+    "backupAndResume.ftpSettings": string; // FTP设置
+    "backupAndResume.ftpHost": string; // FTP主机
+    "backupAndResume.ftpHostHint": string; // FTP主机提示
+    "backupAndResume.ftpPort": string; // FTP端口
+    "backupAndResume.ftpPortHint": string; // FTP端口提示
+    "backupAndResume.ftpRemoteDirectory": string; // FTP远程目录
+    "backupAndResume.ftpRemoteDirectoryHint": string; // FTP目录提示
+    "backupAndResume.ftpInvalidMode": string; // FTP模式无效
+    "backupAndResume.ftpInvalidHost": string; // FTP主机无效
+    "backupAndResume.ftpInvalidPort": string; // FTP端口无效
+    "backupAndResume.ftpCredentialsRequired": string; // FTP凭据不能为空
+    "backupAndResume.ftpInvalidDirectory": string; // FTP目录无效
+    "backupAndResume.ftpError.unsupported": string; // 不支持FTP备份
+    "backupAndResume.ftpError.invalidConfig": string; // FTP配置无效
+    "backupAndResume.ftpError.dnsFailed": string; // FTP地址解析失败
+    "backupAndResume.ftpError.timeout": string; // FTP超时
+    "backupAndResume.ftpError.networkFailed": string; // FTP网络失败
+    "backupAndResume.ftpError.authFailed": string; // FTP认证失败
+    "backupAndResume.ftpError.tlsFailed": string; // FTPS TLS失败
+    "backupAndResume.ftpError.directoryNotFound": string; // FTP目录不存在
+    "backupAndResume.ftpError.fileNotFound": string; // FTP备份文件不存在
+    "backupAndResume.ftpError.uploadFailed": string; // FTP上传失败
+    "backupAndResume.ftpError.downloadFailed": string; // FTP下载失败
+    "backupAndResume.ftpError.replaceFailed": string; // FTP替换失败
+    "backupAndResume.ftpError.cancelled": string; // FTP操作取消
+    "backupAndResume.testFtpConnection": string; // 测试FTP连接
+    "backupAndResume.testingFtpConnection": string; // 测试FTP连接中
+    "backupAndResume.backupToFtp": string; // 备份到FTP
+    "backupAndResume.resumeFromFtp": string; // 从FTP恢复
+    "backupAndResume.ftpRestoreConfirm": string; // FTP恢复确认
+    "toast.ftpConnectionSuccess": string; // FTP连接成功
+    "toast.ftpConnectionFail": string; // FTP连接失败
+    "toast.ftpSettingsInvalid": string; // FTP设置无效
     "backupAndResume.resumeMode.append": string; // 附加
     "backupAndResume.resumeMode.overwrite-default": string; // 覆盖（默认）
     "backupAndResume.resumeMode.overwrite": string; // 覆盖

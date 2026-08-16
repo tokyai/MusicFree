@@ -5627,11 +5627,6 @@ expo-constants@~17.0.0, expo-constants@~17.0.3:
     "@expo/config" "~10.0.4"
     "@expo/env" "~0.4.0"
 
-expo-document-picker@~13.0.1:
-  version "13.0.1"
-  resolved "https://registry.npmmirror.com/expo-document-picker/-/expo-document-picker-13.0.1.tgz"
-  integrity sha512-M3O3SDqubsRbVyY+Xu6V45K0/G1S1IqEdmVAnPkOiUU2eIEFfF5oP4KON4CsvEhO9IIunnpRr/oq9NQxb3SrEA==
-
 expo-file-system@~18.0.6:
   version "18.0.6"
   resolved "https://registry.npmmirror.com/expo-file-system/-/expo-file-system-18.0.6.tgz"
@@ -9298,11 +9293,6 @@ react-native-image-colors@^2.4.0:
   integrity sha512-qlC31+UNVthByNLVuYSEQeZghOXn3uy1GLF6lHKlvT1HM1GGFH/LXNhU8iXAoQvUyzNa1bEAOTo09Hwinvp/rA==
   dependencies:
     node-vibrant "3.1.6"
-
-react-native-image-picker@^7.1.2:
-  version "7.1.2"
-  resolved "https://registry.npmmirror.com/react-native-image-picker/-/react-native-image-picker-7.1.2.tgz"
-  integrity sha512-b5y5nP60RIPxlAXlptn2QwlIuZWCUDWa/YPUVjgHc0Ih60mRiOg1PSzf0IjHSLeOZShCpirpvSPGnDExIpTRUg==
 
 react-native-is-edge-to-edge@1.1.7:
   version "1.1.7"

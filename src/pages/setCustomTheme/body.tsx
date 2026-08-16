@@ -5,21 +5,15 @@ import ThemeText from "@/components/base/themeText";
 import { showPanel } from "@/components/panels/usePanel";
 import { ImgAsset } from "@/constants/assetsConst";
 import globalStyle from "@/constants/globalStyle";
-import pathConst from "@/constants/pathConst";
 import { useI18N } from "@/core/i18n";
 import Theme from "@/core/theme";
 import useOrientation from "@/hooks/useOrientation";
-import { CustomizedColors } from "@/hooks/useColors";
-import { grayRate } from "@/utils/colorUtil";
 import rpx from "@/utils/rpx";
 import Slider from "@react-native-community/slider";
 import Color from "color";
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { copyFile } from "react-native-fs";
 import { ScrollView, TouchableOpacity } from "react-native-gesture-handler";
-import ImageColors from "react-native-image-colors";
-import { launchImageLibrary } from "react-native-image-picker";
 
 export default function Body() {
     const theme = Theme.useTheme();
@@ -27,114 +21,14 @@ export default function Body() {
     const { t } = useI18N();
     const orientation = useOrientation();
 
-    async function onImageClick() {
-        try {
-            const result = await launchImageLibrary({
-                mediaType: "photo",
-            });
-            const uri = result.assets?.[0].uri;
-            if (!uri) {
-                return;
-            }
-
-            const bgPath = `${pathConst.dataPath}background${uri.substring(
-                uri.lastIndexOf("."),
-            )}`;
-            await copyFile(uri, bgPath);
-
-            const colorsResult = await ImageColors.getColors(uri, {
-                fallback: "#ffffff",
-            });
-            const colors = {
-                primary:
-                    colorsResult.platform === "android"
-                        ? colorsResult.dominant
-                        : colorsResult.platform === "ios"
-                            ? colorsResult.primary
-                            : colorsResult.vibrant,
-                average:
-                    colorsResult.platform === "android"
-                        ? colorsResult.average
-                        : colorsResult.platform === "ios"
-                            ? colorsResult.detail
-                            : colorsResult.dominant,
-                vibrant:
-                    colorsResult.platform === "android"
-                        ? colorsResult.vibrant
-                        : colorsResult.platform === "ios"
-                            ? colorsResult.secondary
-                            : colorsResult.vibrant,
-            };
-
-            const primaryGrayRate = grayRate(colors.primary!);
-
-            let themeColors: Partial<CustomizedColors>;
-            if (primaryGrayRate < -0.4) {
-                const primaryColor = Color(colors.primary!);
-
-                console.log(
-                    colors.primary,
-                    primaryGrayRate,
-                    primaryColor
-                        .whiten(3 * primaryGrayRate)
-                        .hex()
-                        .toString(),
-                );
-                themeColors = {
-                    appBar: colors.primary,
-                    primary: primaryColor
-                        .darken(primaryGrayRate * 5)
-                        .toString(),
-                    musicBar: colors.primary,
-                    card: "rgba(0,0,0,0.2)",
-                    tabBar: primaryColor.alpha(0.2).toString(),
-                };
-            } else if (primaryGrayRate > 0.4) {
-                themeColors = {
-                    appBar: colors.primary,
-                    primary: Color(colors.primary)
-                        .darken(primaryGrayRate * 5)
-                        .toString(),
-                    musicBar: colors.primary,
-                    card: "rgba(0,0,0,0.2)",
-                };
-            } else {
-                // const primaryColor = Color(colors.primary!);
-
-                themeColors = {
-                    appBar: colors.primary,
-                    primary: Color(colors.primary)
-                        .saturate(Math.abs(primaryGrayRate) * 2 + 2)
-                        .toString(),
-                    musicBar: colors.primary,
-                    card: "rgba(0,0,0,0.2)",
-                };
-            }
-
-            Theme.setTheme("custom", {
-                colors: themeColors,
-                background: {
-                    url: `file://${bgPath}#${Date.now()}`,
-                },
-            });
-            // Config.set('setting.theme.colors', {
-            //     primary: primaryColor,
-            //     textHighlight: textHighlight,
-            //     accent: textHighlight,
-            // });
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
     const preview = (
-        <TouchableOpacity onPress={onImageClick}>
+        <View>
             <Image
                 style={styles.image}
                 uri={backgroundInfo?.url}
                 emptySrc={ImgAsset.addBackground}
             />
-        </TouchableOpacity>
+        </View>
     );
 
     const controls = (
@@ -227,6 +121,7 @@ export default function Body() {
         return (
             <HorizontalSafeAreaView style={globalStyle.flex1}>
                 <ResponsiveSplitView
+                    carPreset="balanced"
                     primary={<ScrollView style={styles.previewPane}>{preview}</ScrollView>}
                     secondary={
                         <ScrollView style={styles.controlsPane}>
@@ -264,8 +159,9 @@ const styles = StyleSheet.create({
     image: {
         marginTop: rpx(36),
         borderRadius: rpx(12),
-        width: rpx(460),
-        height: rpx(690),
+        width: "100%",
+        maxWidth: rpx(460),
+        aspectRatio: 2 / 3,
         alignSelf: "center",
     },
     sliderWrapper: {

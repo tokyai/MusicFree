@@ -1,6 +1,5 @@
 import ListItem, { ListItemHeader } from "@/components/base/listItem";
 import Backup from "@/core/backup";
-import { ROUTE_PATH, useNavigate } from "@/core/router";
 import Toast from "@/utils/toast";
 import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
@@ -12,103 +11,148 @@ import axios from "axios";
 import { ResumeMode } from "@/constants/commonConst.ts";
 import Config, { useAppConfig } from "@/core/appConfig";
 import { useI18N } from "@/core/i18n";
-import delay from "@/utils/delay";
-import { writeInChunks } from "@/utils/fileUtils.ts";
-import { errorLog } from "@/utils/log.ts";
-import { getDocumentAsync } from "expo-document-picker";
-import { readAsStringAsync } from "expo-file-system";
 import { AuthType, createClient } from "webdav";
 import useOrientation from "@/hooks/useOrientation";
 import ResponsiveSplitView from "@/components/base/responsiveSplitView";
+import FtpBackupService, {
+    type FtpConfigField,
+    type IFtpBackupError,
+    normalizeFtpBackupOptions,
+} from "@/core/ftpBackup";
 
 export default function BackupSetting() {
     const { t } = useI18N();
-    const navigate = useNavigate();
 
     const resumeMode = useAppConfig("backup.resumeMode");
     const webdavUrl = useAppConfig("webdav.url");
     const webdavUsername = useAppConfig("webdav.username");
     const webdavPassword = useAppConfig("webdav.password");
+    const ftpMode = useAppConfig("ftp.mode") === "ftp" ? "ftp" : "ftps";
+    const ftpHost = useAppConfig("ftp.host");
+    const ftpPort = useAppConfig("ftp.port");
+    const ftpUsername = useAppConfig("ftp.username");
+    const ftpPassword = useAppConfig("ftp.password");
+    const ftpRemoteDirectory = useAppConfig("ftp.remoteDirectory");
     const orientation = useOrientation();
 
+    const getErrorReason = (reason: unknown) => {
+        const configField = reason instanceof Error
+            ? (reason as IFtpBackupError).configField
+            : undefined;
+        const errorCode = reason instanceof Error
+            ? (reason as IFtpBackupError).code
+            : undefined;
+        const localizedField: Record<FtpConfigField, string> = {
+            mode: t("backupAndResume.ftpInvalidMode"),
+            host: t("backupAndResume.ftpInvalidHost"),
+            port: t("backupAndResume.ftpInvalidPort"),
+            credentials: t("backupAndResume.ftpCredentialsRequired"),
+            directory: t("backupAndResume.ftpInvalidDirectory"),
+        };
+        const localizedCode: Record<string, string> = {
+            FTP_UNSUPPORTED: t("backupAndResume.ftpError.unsupported"),
+            FTP_INVALID_CONFIG: t("backupAndResume.ftpError.invalidConfig"),
+            FTP_DNS_FAILED: t("backupAndResume.ftpError.dnsFailed"),
+            FTP_CONNECT_TIMEOUT: t("backupAndResume.ftpError.timeout"),
+            FTP_NETWORK_FAILED: t("backupAndResume.ftpError.networkFailed"),
+            FTP_AUTH_FAILED: t("backupAndResume.ftpError.authFailed"),
+            FTP_TLS_FAILED: t("backupAndResume.ftpError.tlsFailed"),
+            FTP_DIRECTORY_NOT_FOUND: t(
+                "backupAndResume.ftpError.directoryNotFound",
+            ),
+            FTP_FILE_NOT_FOUND: t("backupAndResume.ftpError.fileNotFound"),
+            FTP_UPLOAD_FAILED: t("backupAndResume.ftpError.uploadFailed"),
+            FTP_DOWNLOAD_FAILED: t("backupAndResume.ftpError.downloadFailed"),
+            FTP_REPLACE_FAILED: t("backupAndResume.ftpError.replaceFailed"),
+            FTP_CANCELLED: t("backupAndResume.ftpError.cancelled"),
+        };
+        if (configField) {
+            return localizedField[configField];
+        }
+        if (errorCode && localizedCode[errorCode]) {
+            return localizedCode[errorCode];
+        }
+        return reason instanceof Error ? reason.message : String(reason ?? "");
+    };
 
-    const onBackupToLocal = async () => {
-        navigate(ROUTE_PATH.FILE_SELECTOR, {
-            fileType: "folder",
-            multi: false,
-            actionText: t("backupAndResume.beginBackup"),
-            async onAction(selectedFiles) {
-                const raw = Backup.backup();
-                const folder = selectedFiles[0]?.path;
-                return new Promise(resolve => {
+    function onTestFtp() {
+        showDialog("LoadingDialog", {
+            title: t("backupAndResume.testFtpConnection"),
+            loadingText: t("backupAndResume.testingFtpConnection"),
+            promise: FtpBackupService.testConnection(),
+            onResolve(_, hideDialog) {
+                Toast.success(t("toast.ftpConnectionSuccess"));
+                hideDialog();
+            },
+            onCancel(hideDialog) {
+                FtpBackupService.cancel();
+                hideDialog();
+            },
+            onReject(reason, hideDialog) {
+                hideDialog();
+                Toast.warn(
+                    t("toast.ftpConnectionFail", {
+                        reason: getErrorReason(reason),
+                    }),
+                );
+            },
+        });
+    }
+
+    function onBackupToFtp() {
+        showDialog("LoadingDialog", {
+            title: t("backupAndResume.backupToFtp"),
+            loadingText: t("backupAndResume.backuping"),
+            promise: FtpBackupService.backup(),
+            onResolve(_, hideDialog) {
+                Toast.success(t("toast.backupSuccess"));
+                hideDialog();
+            },
+            onCancel(hideDialog) {
+                FtpBackupService.cancel();
+                hideDialog();
+            },
+            onReject(reason, hideDialog) {
+                hideDialog();
+                Toast.warn(
+                    t("toast.backupFail", { reason: getErrorReason(reason) }),
+                );
+            },
+        });
+    }
+
+    function onResumeFromFtp() {
+        showDialog("SimpleDialog", {
+            title: t("backupAndResume.resumeFromFtp"),
+            content: t("backupAndResume.ftpRestoreConfirm"),
+            onOk() {
+                setTimeout(() => {
                     showDialog("LoadingDialog", {
-                        title: t("backupAndResume.backupDialogTitle"),
-                        loadingText: t("backupAndResume.backuping"),
-                        promise: writeInChunks(
-                            `${folder}${folder?.endsWith("/") ? "" : "/"
-                            }backup.json`,
-                            raw,
+                        title: t("backupAndResume.resumeFromFtp"),
+                        loadingText: t("backupAndResume.resuming"),
+                        promise: FtpBackupService.resume(
+                            resumeMode ?? ResumeMode.Append,
                         ),
                         onResolve(_, hideDialog) {
-                            Toast.success(t("toast.backupSuccess"));
+                            Toast.success(t("toast.resumeSuccess"));
                             hideDialog();
-                            resolve(true);
                         },
                         onCancel(hideDialog) {
+                            FtpBackupService.cancel();
                             hideDialog();
-                            resolve(false);
                         },
                         onReject(reason, hideDialog) {
                             hideDialog();
-                            resolve(false);
-                            console.log(reason);
-                            Toast.warn(t("toast.backupFail", { reason: reason?.message ?? reason }));
+                            Toast.warn(
+                                t("toast.resumeFail", {
+                                    reason: getErrorReason(reason),
+                                }),
+                            );
                         },
                     });
-                });
+                }, 0);
             },
         });
-    };
-
-    async function onResumeFromLocal() {
-        try {
-            const pickResult = await getDocumentAsync({
-                copyToCacheDirectory: true,
-                type: "application/json",
-            });
-            if (pickResult.canceled) {
-                return;
-            }
-            const result = await readAsStringAsync(pickResult.assets[0].uri);
-            return new Promise(resolve => {
-                showDialog("LoadingDialog", {
-                    title: t("backupAndResume.resumeFromLocalFile"),
-                    loadingText: t("backupAndResume.resuming"),
-                    async task() {
-                        await delay(300, false);
-                        return Backup.resume(result, resumeMode);
-                    },
-                    onResolve(_, hideDialog) {
-                        Toast.success(t("toast.resumeSuccess"));
-                        hideDialog();
-                        resolve(true);
-                    },
-                    onCancel(hideDialog) {
-                        hideDialog();
-                        resolve(false);
-                    },
-                    onReject(reason, hideDialog) {
-                        hideDialog();
-                        resolve(false);
-                        console.log(reason);
-                        Toast.warn(t("toast.resumeFail", { reason: reason?.message ?? reason }));
-                    },
-                });
-            });
-        } catch (e: any) {
-            errorLog("恢复失败", e);
-            Toast.warn(t("toast.resumeFail", { reason: e?.message ?? e }));
-        }
     }
 
     async function onResumeFromUrl() {
@@ -204,6 +248,126 @@ export default function BackupSetting() {
         }
     }
 
+    const ftpContent = (
+        <>
+            <ListItemHeader>{t("backupAndResume.ftpBackup")}</ListItemHeader>
+            <ListItem
+                withHorizontalPadding
+                onPress={() => {
+                    showDialog("RadioDialog", {
+                        title: t("backupAndResume.ftpMode"),
+                        content: [
+                            {
+                                label: t("backupAndResume.ftpMode.ftps"),
+                                value: "ftps",
+                            },
+                            {
+                                label: t("backupAndResume.ftpMode.ftp"),
+                                value: "ftp",
+                            },
+                        ],
+                        onOk(value) {
+                            Config.setConfig("ftp.mode", value as "ftp" | "ftps");
+                        },
+                    });
+                }}>
+                <ListItem.Content
+                    title={t("backupAndResume.ftpMode")}
+                    description={
+                        ftpMode === "ftp"
+                            ? t("backupAndResume.ftpPlainWarning")
+                            : t("backupAndResume.ftpTlsDescription")
+                    }
+                />
+                <ListItem.ListItemText>
+                    {t(("backupAndResume.ftpMode." + ftpMode) as any)}
+                </ListItem.ListItemText>
+            </ListItem>
+            <ListItem
+                withHorizontalPadding
+                onPress={() => {
+                    showPanel("SetUserVariables", {
+                        title: t("backupAndResume.ftpSettings"),
+                        initValues: {
+                            host: ftpHost ?? "",
+                            port: String(ftpPort ?? 21),
+                            username: ftpUsername ?? "",
+                            password: ftpPassword ?? "",
+                            remoteDirectory: ftpRemoteDirectory ?? "/MusicFree",
+                        },
+                        variables: [
+                            {
+                                key: "host",
+                                name: t("backupAndResume.ftpHost"),
+                                hint: t("backupAndResume.ftpHostHint"),
+                            },
+                            {
+                                key: "port",
+                                name: t("backupAndResume.ftpPort"),
+                                hint: t("backupAndResume.ftpPortHint"),
+                            },
+                            {
+                                key: "username",
+                                name: t("common.username"),
+                            },
+                            {
+                                key: "password",
+                                name: t("common.password"),
+                            },
+                            {
+                                key: "remoteDirectory",
+                                name: t("backupAndResume.ftpRemoteDirectory"),
+                                hint: t("backupAndResume.ftpRemoteDirectoryHint"),
+                            },
+                        ],
+                        secureKeys: ["password"],
+                        keyboardTypes: { port: "numeric" },
+                        onOk(values, closePanel) {
+                            try {
+                                const rawPort = values?.port?.trim();
+                                const options = normalizeFtpBackupOptions({
+                                    mode: ftpMode,
+                                    host: values?.host,
+                                    port: rawPort ? Number(rawPort) : undefined,
+                                    username: values?.username,
+                                    password: values?.password,
+                                    remoteDirectory: values?.remoteDirectory,
+                                });
+                                Config.setConfig("ftp.mode", options.mode);
+                                Config.setConfig("ftp.host", options.host);
+                                Config.setConfig("ftp.port", options.port);
+                                Config.setConfig("ftp.username", options.username);
+                                Config.setConfig("ftp.password", options.password);
+                                Config.setConfig(
+                                    "ftp.remoteDirectory",
+                                    options.remoteDirectory,
+                                );
+                                Toast.success(t("toast.saveSuccess"));
+                                closePanel();
+                            } catch (error) {
+                                Toast.warn(
+                                    t("toast.ftpSettingsInvalid", {
+                                        reason: getErrorReason(error),
+                                    }),
+                                );
+                            }
+                        },
+                    });
+                }}>
+                <ListItem.Content title={t("backupAndResume.ftpSettings")} />
+            </ListItem>
+            <ListItem withHorizontalPadding onPress={onTestFtp}>
+                <ListItem.Content title={t("backupAndResume.testFtpConnection")} />
+            </ListItem>
+            <ListItem withHorizontalPadding onPress={onBackupToFtp}>
+                <ListItem.Content title={t("backupAndResume.backupToFtp")} />
+            </ListItem>
+            <ListItem withHorizontalPadding onPress={onResumeFromFtp}>
+                <ListItem.Content title={t("backupAndResume.resumeFromFtp")} />
+            </ListItem>
+        </>
+    );
+
     const resumeContent = (
         <>
             <ListItemHeader>{t("sidebar.backupAndResume")}</ListItemHeader>
@@ -242,13 +406,7 @@ export default function BackupSetting() {
                     }
                 </ListItem.ListItemText>
             </ListItem>
-            <ListItemHeader>{t("backupAndResume.localBackup")}</ListItemHeader>
-            <ListItem withHorizontalPadding onPress={onBackupToLocal}>
-                <ListItem.Content title={t("backupAndResume.backupToLocal")} />
-            </ListItem>
-            <ListItem withHorizontalPadding onPress={onResumeFromLocal}>
-                <ListItem.Content title={t("backupAndResume.resumeFromLocalFile")} />
-            </ListItem>
+            {ftpContent}
             <ListItem withHorizontalPadding onPress={onResumeFromUrl}>
                 <ListItem.Content title={t("backupAndResume.resumeFromUrlDialogTitle")} />
             </ListItem>
@@ -307,6 +465,7 @@ export default function BackupSetting() {
     if (orientation === "horizontal") {
         return (
             <ResponsiveSplitView
+                carPreset="balanced"
                 primary={
                     <ScrollView style={style.wrapper}>
                         {resumeContent}

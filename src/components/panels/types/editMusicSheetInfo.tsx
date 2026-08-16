@@ -19,7 +19,6 @@ import { readAsStringAsync } from "expo-file-system";
 import React, { useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { exists, unlink, writeFile } from "react-native-fs";
-import { launchImageLibrary } from "react-native-image-picker";
 
 interface IEditSheetDetailProps {
   musicSheet: IMusic.IMusicSheetItem;
@@ -32,22 +31,6 @@ export default function EditMusicSheetInfo(props: IEditSheetDetailProps) {
 
     const [coverImg, setCoverImg] = useState(musicSheet?.coverImg);
     const [title, setTitle] = useState(musicSheet?.title);
-
-    const onChangeCoverPress = async () => {
-        try {
-            const result = await launchImageLibrary({
-                mediaType: "photo",
-            });
-            const uri = result.assets?.[0].uri;
-            if (!uri) {
-                return;
-            }
-            console.log(uri);
-            setCoverImg(uri);
-        } catch (e) {
-            console.log(e);
-        }
-    };
 
     function onTitleChange(_: string) {
         setTitle(_);
@@ -107,7 +90,6 @@ export default function EditMusicSheetInfo(props: IEditSheetDetailProps) {
                 <View style={style.row}>
                     <ThemeText>{t("common.cover")}</ThemeText>
                     <TouchableOpacity
-                        onPress={onChangeCoverPress}
                         onLongPress={() => {
                             setCoverImg(undefined);
                         }}>

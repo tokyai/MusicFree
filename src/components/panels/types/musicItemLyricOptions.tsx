@@ -17,8 +17,6 @@ import Config from "@/core/appConfig";
 import lyricManager from "@/core/lyricManager";
 import mediaCache from "@/core/mediaCache";
 import LyricUtil from "@/native/lyricUtil";
-import { getDocumentAsync } from "expo-document-picker";
-import { readAsStringAsync } from "expo-file-system";
 import { FlatList } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PanelBase from "../base/panelBase";
@@ -135,56 +133,6 @@ export default function MusicItemLyricOptions(
             },
         },
         {
-            icon: "arrow-up-tray",
-            title: t("panel.musicItemLyricOptions.uploadLocalLyric"),
-            async onPress() {
-                try {
-                    const result = await getDocumentAsync({
-                        copyToCacheDirectory: true,
-                    });
-                    if (result.canceled) {
-                        return;
-                    }
-                    const pickedDoc = result.assets[0].uri;
-                    const lyricContent = await readAsStringAsync(pickedDoc, {
-                        encoding: "utf8",
-                    });                    await lyricManager.uploadLocalLyric(musicItem, lyricContent);
-                    Toast.success(t("toast.settingSuccess"));
-                    hidePanel();
-                } catch (e: any) {
-                    console.log(e);
-                    Toast.warn(t("panel.musicItemLyricOptions.settingFail", {
-                        reason: e?.message,
-                    }));
-                }
-            },
-        },
-        {
-            icon: "arrow-up-tray",
-            title: t("panel.musicItemLyricOptions.uploadLocalLyricTranslation"),
-            async onPress() {
-                try {
-                    const result = await getDocumentAsync({
-                        copyToCacheDirectory: true,
-                    });
-                    if (result.canceled) {
-                        return;
-                    }
-                    const pickedDoc = result.assets[0].uri;
-                    const lyricContent = await readAsStringAsync(pickedDoc, {
-                        encoding: "utf8",
-                    });                    await lyricManager.uploadLocalLyric(musicItem, lyricContent, "translation");
-                    Toast.success(t("toast.settingSuccess"));
-                    hidePanel();
-                } catch (e: any) {
-                    console.log(e);
-                    Toast.warn(t("panel.musicItemLyricOptions.settingFail", {
-                        reason: e?.message,
-                    }));
-                }
-            },
-        },
-        {
             icon: "trash-outline",
             title: t("panel.musicItemLyricOptions.deleteLocalLyric"),
             async onPress() {
@@ -205,13 +153,7 @@ export default function MusicItemLyricOptions(
         <PanelBase
             renderBody={() => (
                 <>
-                    <View
-                        style={[
-                            style.header,
-                            displayMetrics.isCarMode
-                                ? { width: "100%" }
-                                : null,
-                        ]}>
+                    <View style={style.header}>
                         <FastImage
                             style={style.artwork}
                             source={musicItem?.artwork}
@@ -231,13 +173,7 @@ export default function MusicItemLyricOptions(
                         </View>
                     </View>
                     <Divider />
-                    <View
-                        style={[
-                            style.wrapper,
-                            displayMetrics.isCarMode
-                                ? { width: "100%" }
-                                : null,
-                        ]}>
+                    <View style={style.wrapper}>
                         <FlatList
                             data={options}
                             getItemLayout={(_, index) => ({
@@ -278,11 +214,11 @@ export default function MusicItemLyricOptions(
 
 const style = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: "100%",
         flex: 1,
     },
     header: {
-        width: rpx(750),
+        width: "100%",
         height: rpx(200),
         flexDirection: "row",
         padding: rpx(24),
@@ -297,7 +233,8 @@ const style = StyleSheet.create({
     },
     content: {
         marginLeft: rpx(36),
-        width: rpx(526),
+        flex: 1,
+        minWidth: 0,
         height: rpx(140),
         justifyContent: "space-around",
     },
@@ -305,7 +242,7 @@ const style = StyleSheet.create({
         paddingRight: rpx(24),
     },
     footer: {
-        width: rpx(750),
+        width: "100%",
         height: rpx(30),
     },
 });

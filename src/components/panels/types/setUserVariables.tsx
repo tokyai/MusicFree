@@ -1,5 +1,9 @@
 import React, { useRef } from "react";
-import { KeyboardAvoidingView, StyleSheet } from "react-native";
+import {
+    KeyboardAvoidingView,
+    StyleSheet,
+    TextInputProps,
+} from "react-native";
 import rpx, { vmax } from "@/utils/rpx";
 import useColors from "@/hooks/useColors";
 
@@ -12,16 +16,26 @@ import Input from "@/components/base/input";
 import globalStyle from "@/constants/globalStyle";
 import PanelHeader from "../base/panelHeader";
 
-interface IUserVariablesProps {
+export interface IUserVariablesProps {
     title?: string;
     onOk: (values: Record<string, string>, closePanel: () => void) => void;
     variables: IPlugin.IUserVariable[];
     initValues?: Record<string, string>;
     onCancel?: () => void;
+    secureKeys?: string[];
+    keyboardTypes?: Record<string, TextInputProps["keyboardType"]>;
 }
 
 export default function SetUserVariables(props: IUserVariablesProps) {
-    const { onOk, onCancel, variables, initValues = {}, title } = props;
+    const {
+        onOk,
+        onCancel,
+        variables,
+        initValues = {},
+        title,
+        secureKeys = [],
+        keyboardTypes = {},
+    } = props;
 
     const colors = useColors();
 
@@ -74,6 +88,8 @@ export default function SetUserVariables(props: IUserVariablesProps) {
                                             },
                                         ]}
                                         placeholder={it.hint}
+                                        secureTextEntry={secureKeys.includes(it.key)}
+                                        keyboardType={keyboardTypes[it.key]}
                                     />
                                 </ListItem>
                             ))}
@@ -87,10 +103,10 @@ export default function SetUserVariables(props: IUserVariablesProps) {
 
 const styles = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: "100%",
     },
     opeartions: {
-        width: rpx(750),
+        width: "100%",
         paddingHorizontal: rpx(24),
         flexDirection: "row",
         height: rpx(100),

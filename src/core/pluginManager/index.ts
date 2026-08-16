@@ -13,11 +13,10 @@ import { removeAllMediaExtra } from "@/utils/mediaExtra";
 import axios from "axios";
 import { compare } from "compare-versions";
 import EventEmitter from "eventemitter3";
-import { readAsStringAsync } from "expo-file-system";
 import { atom, getDefaultStore, useAtomValue } from "jotai";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
-import { copyFile, readDir, readFile, unlink, writeFile } from "react-native-fs";
+import { readDir, readFile, unlink, writeFile } from "react-native-fs";
 import { showToast } from "@/components/base/toast";
 import { devLog, errorLog, trace } from "../../utils/log";
 import pluginMeta from "./meta";
@@ -170,96 +169,6 @@ class PluginManager implements IPluginManager, IInjectable {
         }
 
         Plugin.injectDependencies(this);
-    }
-
-    /**
-     * 从本地文件安装插件
-     * @param pluginPath - 插件文件路径
-     * @param config - 安装配置选项
-     * @param config.notCheckVersion - 为true时跳过版本检查
-     * @param config.useExpoFs - 为true时使用Expo文件系统代替React Native的文件系统
-     * @returns 安装结果，包含成功状态和相关信息
-     */
-    async installPluginFromLocalFile(
-        pluginPath: string,
-        config?: IInstallPluginConfig & {
-            useExpoFs?: boolean;
-        },
-    ): Promise<IInstallPluginResult> {
-        let funcCode: string;
-        if (config?.useExpoFs) {
-            funcCode = await readAsStringAsync(pluginPath);
-        } else {
-            funcCode = await readFile(pluginPath, "utf8");
-        }
-
-        if (funcCode) {
-            const plugin = new Plugin(funcCode, pluginPath);
-            let allPlugins = [...this.getPlugins()];
-
-            const _pluginIndex = allPlugins.findIndex(
-                p => p.hash === plugin.hash,
-            );
-            if (_pluginIndex !== -1) {
-                // 静默忽略
-                return {
-                    success: true,
-                    message: "插件已安装",
-                    pluginName: plugin.name,
-                    pluginHash: plugin.hash,
-                };
-            }
-            const oldVersionPlugin = allPlugins.find(
-                p => p.name === plugin.name,
-            );
-            if (oldVersionPlugin && !config?.notCheckVersion) {
-                if (
-                    compare(
-                        oldVersionPlugin.instance.version ?? "",
-                        plugin.instance.version ?? "",
-                        ">",
-                    )
-                ) {
-                    return {
-                        success: false,
-                        message: "已安装更新版本的插件",
-                        pluginName: plugin.name,
-                        pluginHash: plugin.hash,
-                    };
-                }
-            }
-
-            if (plugin.state === PluginState.Mounted) {
-                const fn = nanoid();
-                if (oldVersionPlugin) {
-                    allPlugins = allPlugins.filter(
-                        _ => _.hash !== oldVersionPlugin.hash,
-                    );
-                    try {
-                        await unlink(oldVersionPlugin.path);
-                    } catch {}
-                }
-                const _pluginPath = `${pathConst.pluginPath}${fn}.js`;
-                await copyFile(pluginPath, _pluginPath);
-                plugin.path = _pluginPath;
-                allPlugins = allPlugins.concat(plugin);
-                this.setPlugins(allPlugins);
-
-                return {
-                    success: true,
-                    pluginName: plugin.name,
-                    pluginHash: plugin.hash,
-                };
-            }
-            return {
-                success: false,
-                message: "插件无法解析",
-            };
-        }
-        return {
-            success: false,
-            message: "插件无法识别",
-        };
     }
 
     /**

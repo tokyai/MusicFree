@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import rpx from "@/utils/rpx";
-import * as DocumentPicker from "expo-document-picker";
 import Loading from "@/components/base/loading";
 
 import PluginManager, { useSortedPlugins } from "@/core/pluginManager";
-import { trace } from "@/utils/log";
 
 import Toast from "@/utils/toast";
 import axios from "axios";
@@ -71,41 +69,6 @@ export default function PluginList() {
             },
         },
     ];
-
-    async function onInstallFromLocalClick() {
-        try {
-            const results = await DocumentPicker.getDocumentAsync({
-                copyToCacheDirectory: true,
-                multiple: true,
-                type: ["application/javascript", "text/javascript"],
-            });
-            if (results.canceled) {
-                // 用户取消
-                return;
-            }
-            setLoading(true);
-
-            await Promise.all(
-                results.assets.map(async it => {
-                    await PluginManager.installPluginFromLocalFile(it.uri, {
-                        notCheckVersion: Config.getConfig(
-                            "basic.notCheckPluginVersion",
-                        ),
-                        useExpoFs: true,
-                    });
-                }),
-            );
-            // 初步过滤
-
-            Toast.success(t("toast.installPluginSuccess"));
-        } catch (e: any) {
-            trace("插件安装失败", e?.message);
-            Toast.warn(t("toast.installPluginFail", {
-                reason: e?.message ?? "",
-            }));
-        }
-        setLoading(false);
-    }
 
     async function onInstallFromNetworkClick() {
         showPanel("SimpleInput", {
@@ -273,10 +236,6 @@ export default function PluginList() {
             header: t("pluginSetting.menu.installPlugin"),
             candidates: [
                 {
-                    value: "从本地安装插件",
-                    title: t("pluginSetting.fabOptions.installFromLocal"),
-                },
-                {
                     value: "从网络安装插件",
                     title: t("pluginSetting.fabOptions.installFromNetwork"),
                 },
@@ -290,9 +249,7 @@ export default function PluginList() {
                 },
             ],
             onPress(item) {
-                if (item.value === "从本地安装插件") {
-                    onInstallFromLocalClick();
-                } else if (item.value === "从网络安装插件") {
+                if (item.value === "从网络安装插件") {
                     onInstallFromNetworkClick();
                 } else if (item.value === "更新订阅") {
                     onSubscribeClick();
@@ -329,6 +286,7 @@ export default function PluginList() {
                 </AppBar>
                 <HorizontalSafeAreaView style={style.wrapper}>
                     <ResponsiveSplitView
+                        carPreset="secondaryActions"
                         primary={pluginList}
                         secondary={
                             <View style={style.actionRail}>

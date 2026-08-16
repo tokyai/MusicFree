@@ -69,6 +69,14 @@ export interface IAppConfigProperties {
     "webdav.username": string;
     "webdav.password": string;
 
+    // FTP / FTPS backup
+    "ftp.mode": "ftp" | "ftps";
+    "ftp.host": string;
+    "ftp.port": number;
+    "ftp.username": string;
+    "ftp.password": string;
+    "ftp.remoteDirectory": string;
+
     // Debug（保持嵌套结构）
     "debug.errorLog": boolean;
     "debug.traceLog": boolean;

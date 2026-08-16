@@ -237,23 +237,6 @@ async function extraMakeup() {
                     ),
                 );
                 Toast.success("安装成功~");
-            } else if (url.endsWith(".js")) {
-                PluginManager.installPluginFromLocalFile(url, {
-                    notCheckVersion: Config.getConfig(
-                        "basic.notCheckPluginVersion",
-                    ),
-                })
-                    .then(res => {
-                        if (res.success) {
-                            Toast.success(`插件「${res.pluginName}」安装成功~`);
-                        } else {
-                            Toast.warn("安装失败: " + res.message);
-                        }
-                    })
-                    .catch(e => {
-                        console.log(e);
-                        Toast.warn(e?.message ?? "无法识别此插件");
-                    });
             } else if (supportLocalMediaType.some(it => url.endsWith(it))) {
                 // 本地播放
                 const musicItem = await PluginManager.getByHash(

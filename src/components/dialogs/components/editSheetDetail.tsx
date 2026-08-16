@@ -4,7 +4,6 @@ import rpx from "@/utils/rpx";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import ThemeText from "@/components/base/themeText";
 import { ImgAsset } from "@/constants/assetsConst";
-import { launchImageLibrary } from "react-native-image-picker";
 import pathConst from "@/constants/pathConst";
 import Image from "@/components/base/image";
 import { addFileScheme, addRandomHash } from "@/utils/fileUtils";
@@ -30,22 +29,6 @@ export default function EditSheetDetailDialog(props: IEditSheetDetailProps) {
     const { t } = useI18N();
 
     // onCover
-
-    const onChangeCoverPress = async () => {
-        try {
-            const result = await launchImageLibrary({
-                mediaType: "photo",
-            });
-            const uri = result.assets?.[0].uri;
-            if (!uri) {
-                return;
-            }
-            console.log(uri);
-            setCoverImg(uri);
-        } catch (e) {
-            console.log(e);
-        }
-    };
 
     function onTitleChange(_: string) {
         setTitle(_);
@@ -99,7 +82,6 @@ export default function EditSheetDetailDialog(props: IEditSheetDetailProps) {
                 <View style={style.row}>
                     <ThemeText>{t("common.cover")}</ThemeText>
                     <TouchableOpacity
-                        onPress={onChangeCoverPress}
                         onLongPress={() => {
                             setCoverImg(undefined);
                         }}>

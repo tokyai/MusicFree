@@ -11,6 +11,7 @@ import i18n from "@/core/i18n";
 import useOrientation from "@/hooks/useOrientation";
 import LandscapeNavigationRail from "@/components/base/landscapeNavigationRail";
 import ResponsiveSplitView from "@/components/base/responsiveSplitView";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 export default function TopListBody() {
     const routes = PluginManager.getSortedPluginsWithAbility("getTopLists").map(_ => ({
@@ -20,6 +21,7 @@ export default function TopListBody() {
     const [index, setIndex] = useState(0);
     const colors = useColors();
     const orientation = useOrientation();
+    const displayMetrics = useDisplayMetrics();
 
     const renderScene = useCallback(
         (props: { route: { key: string } }) => (
@@ -36,6 +38,7 @@ export default function TopListBody() {
     if (orientation === "horizontal") {
         return (
             <ResponsiveSplitView
+                carPreset="navigation"
                 primary={
                     <LandscapeNavigationRail
                         sections={[
@@ -105,7 +108,7 @@ export default function TopListBody() {
             )}
             renderScene={renderScene}
             onIndexChange={setIndex}
-            initialLayout={{ width: rpx(750) }}
+            initialLayout={{ width: displayMetrics.width }}
         />
     );
 }

@@ -138,7 +138,17 @@ export default function AboutSetting() {
     );
 
     return orientation === "horizontal" ? (
-        <ResponsiveSplitView primary={profile} secondary={details} />
+        <ResponsiveSplitView
+            primary={
+                <ScrollView
+                    style={style.profileScroll}
+                    contentContainerStyle={style.profileScrollContent}>
+                    {profile}
+                </ScrollView>
+            }
+            secondary={details}
+            carPreset="metadata"
+        />
     ) : (
         <View style={style.wrapper}>
             {profile}
@@ -159,8 +169,17 @@ const style = StyleSheet.create({
         alignItems: "center",
     },
     landscapeHeader: {
-        height: "100%",
+        height: "auto",
+        minHeight: "100%",
         paddingHorizontal: rpx(24),
+        paddingVertical: rpx(24),
+    },
+    profileScroll: {
+        flex: 1,
+        minWidth: 0,
+    },
+    profileScrollContent: {
+        flexGrow: 1,
     },
     contactContainer: {
         flexDirection: "row",

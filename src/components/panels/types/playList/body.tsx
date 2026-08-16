@@ -15,7 +15,6 @@ import Icon from "@/components/base/icon.tsx";
 import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
 const ITEM_HEIGHT = rpx(108);
-const ITEM_WIDTH = rpx(750);
 
 interface IPlayListProps {
     item: IMusic.IMusicItem;
@@ -164,14 +163,15 @@ export default function Body(props: IBodyProps) {
 
 const style = StyleSheet.create({
     playList: {
-        width: rpx(750),
+        width: "100%",
         flex: 1,
     },
     currentPlaying: {
         marginRight: rpx(6),
     },
     musicItem: {
-        width: ITEM_WIDTH,
+        width: "100%",
+        minWidth: 0,
         height: ITEM_HEIGHT,
         paddingHorizontal: rpx(24),
         flexDirection: "row",

@@ -245,7 +245,7 @@ const style = StyleSheet.create({
     },
     wrapper: {
         position: "absolute",
-        width: rpx(750),
+        width: "100%",
         right: 0,
         borderTopLeftRadius: rpx(28),
         borderTopRightRadius: rpx(28),

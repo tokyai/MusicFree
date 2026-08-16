@@ -79,7 +79,7 @@ export default function SearchLrc(props: INewMusicSheetProps) {
 
 const style = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: "100%",
         paddingTop: rpx(36),
         flex: 1,
     },
@@ -91,7 +91,7 @@ const style = StyleSheet.create({
     },
 
     opeartions: {
-        width: rpx(750),
+        width: "100%",
         paddingHorizontal: rpx(24),
         flexDirection: "row",
         height: rpx(100),

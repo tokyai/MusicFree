@@ -109,6 +109,7 @@ export default function Body() {
         return (
             <HorizontalSafeAreaView style={globalStyle.flex1}>
                 <ResponsiveSplitView
+                    carPreset="secondaryActions"
                     primary={<MusicList />}
                     secondary={
                         <View style={style.actionRail}>

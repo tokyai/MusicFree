@@ -242,13 +242,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
         <PanelBase
             renderBody={() => (
                 <>
-                    <View
-                        style={[
-                            style.header,
-                            displayMetrics.isCarMode
-                                ? { width: "100%" }
-                                : null,
-                        ]}>
+                    <View style={style.header}>
                         <FastImage
                             style={style.artwork}
                             source={musicItem?.artwork}
@@ -268,13 +262,7 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                         </View>
                     </View>
                     <Divider />
-                    <View
-                        style={[
-                            style.wrapper,
-                            displayMetrics.isCarMode
-                                ? { width: "100%" }
-                                : null,
-                        ]}>
+                    <View style={style.wrapper}>
                         <FlatList
                             data={options}
                             getItemLayout={(_, index) => ({
@@ -315,11 +303,11 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
 
 const style = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: "100%",
         flex: 1,
     },
     header: {
-        width: rpx(750),
+        width: "100%",
         height: rpx(200),
         flexDirection: "row",
         padding: rpx(24),
@@ -334,7 +322,8 @@ const style = StyleSheet.create({
     },
     content: {
         marginLeft: rpx(36),
-        width: rpx(526),
+        flex: 1,
+        minWidth: 0,
         height: rpx(140),
         justifyContent: "space-around",
     },
@@ -342,7 +331,7 @@ const style = StyleSheet.create({
         paddingRight: rpx(24),
     },
     footer: {
-        width: rpx(750),
+        width: "100%",
         height: rpx(30),
     },
 });

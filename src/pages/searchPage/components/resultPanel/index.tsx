@@ -53,6 +53,7 @@ function ResultPanel() {
     if (orientation === "horizontal") {
         return (
             <ResponsiveSplitView
+                carPreset="navigation"
                 primary={
                     <LandscapeNavigationRail
                         sections={[

@@ -13,6 +13,7 @@ export default function ThemeSetting() {
     if (orientation === "horizontal") {
         return (
             <ResponsiveSplitView
+                carPreset="balanced"
                 primary={
                     <ScrollView style={style.pane}>
                         <Mode />

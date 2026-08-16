@@ -59,6 +59,7 @@ export default function SheetMusicList(props: IMusicListProps) {
                 <HorizontalSafeAreaView style={globalStyle.fwflex1}>
                     {orientation === "horizontal" ? (
                         <ResponsiveSplitView
+                            carPreset="metadata"
                             primary={
                                 <Header
                                     landscape

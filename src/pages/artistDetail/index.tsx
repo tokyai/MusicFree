@@ -54,6 +54,7 @@ export default function ArtistDetail() {
             <HorizontalSafeAreaView style={globalStyle.flex1}>
                 {orientation === "horizontal" ? (
                     <ResponsiveSplitView
+                        carPreset="metadata"
                         primary={
                             <ScrollView
                                 style={globalStyle.flex1}

@@ -95,6 +95,7 @@ function SheetBody(props: IProps) {
 
         return (
             <ResponsiveSplitView
+                carPreset="navigation"
                 primary={<LandscapeNavigationRail sections={sections} />}
                 secondary={
                     <View style={globalStyle.flex1}>

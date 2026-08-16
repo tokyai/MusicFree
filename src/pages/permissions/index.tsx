@@ -111,8 +111,17 @@ export default function Permissions() {
             {orientation === "horizontal" ? (
                 <HorizontalSafeAreaView style={globalStyle.flex1}>
                     <ResponsiveSplitView
-                        primary={<ScrollView>{description}</ScrollView>}
-                        secondary={<ScrollView>{permissionItems}</ScrollView>}
+                        carPreset="metadata"
+                        primary={
+                            <ScrollView style={globalStyle.flex1}>
+                                {description}
+                            </ScrollView>
+                        }
+                        secondary={
+                            <ScrollView style={globalStyle.flex1}>
+                                {permissionItems}
+                            </ScrollView>
+                        }
                     />
                 </HorizontalSafeAreaView>
             ) : (

@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
 import {
+    DisplaySplitPreset,
     getDisplayMetrics,
     getDisplayOverlayWidth,
     normalizeCarDisplayFontSize,
+    resolveDisplaySplitWeights,
 } from "./displayMetrics";
 
 describe("display metrics", () => {
@@ -41,9 +43,33 @@ describe("display metrics", () => {
     });
 
     it("does not let a minimum overlay width exceed available width", () => {
-        expect(getDisplayOverlayWidth("panel", 400)).toBe(400);
-        expect(getDisplayOverlayWidth("dialog", 1920)).toBe(1152);
-        expect(getDisplayOverlayWidth("drawer", 1920)).toBe(640);
+        expect(getDisplayOverlayWidth("panel", 300)).toBe(300);
+        expect(getDisplayOverlayWidth("dialog", 1920)).toBe(960);
+        expect(getDisplayOverlayWidth("drawer", 1920)).toBe(420);
+    });
+
+    it.each([
+        ["navigation", 24, 76],
+        ["home", 28, 72],
+        ["metadata", 30, 70],
+        ["player", 42, 58],
+        ["secondaryActions", 74, 26],
+        ["balanced", 50, 50],
+    ] as Array<[DisplaySplitPreset, number, number]>) (
+        "resolves the %s car split",
+        (preset, primary, secondary) => {
+            expect(resolveDisplaySplitWeights(preset, true)).toEqual({
+                primary,
+                secondary,
+            });
+        },
+    );
+
+    it("keeps explicit phone split weights when car mode is disabled", () => {
+        expect(resolveDisplaySplitWeights("navigation", false, 62, 38)).toEqual({
+            primary: 62,
+            secondary: 38,
+        });
     });
 
     it("falls back to safe dimensions instead of producing NaN styles", () => {

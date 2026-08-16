@@ -687,6 +687,7 @@ export default function BasicSetting() {
     if (orientation === "horizontal") {
         return (
             <ResponsiveSplitView
+                carPreset="navigation"
                 primary={
                     <LandscapeNavigationRail
                         sections={[

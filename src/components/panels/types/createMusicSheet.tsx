@@ -72,10 +72,10 @@ export default function CreateMusicSheet(props: ICreateMusicSheetProps) {
 
 const style = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: "100%",
     },
     operations: {
-        width: rpx(750),
+        width: "100%",
         paddingHorizontal: rpx(24),
         flexDirection: "row",
         height: rpx(100),

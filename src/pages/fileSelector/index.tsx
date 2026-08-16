@@ -356,6 +356,7 @@ export default function FileSelector() {
             {orientation === "horizontal" ? (
                 <HorizontalSafeAreaView style={globalStyle.flex1}>
                     <ResponsiveSplitView
+                        carPreset="secondaryActions"
                         primary={fileList}
                         secondary={landscapeActions}
                         primaryWeight={62}

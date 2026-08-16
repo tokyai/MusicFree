@@ -1,12 +1,18 @@
 import React, { ReactNode } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import useColors from "@/hooks/useColors";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import {
+    DisplaySplitPreset,
+    resolveDisplaySplitWeights,
+} from "@/utils/displayMetrics";
 
 interface IResponsiveSplitViewProps {
     primary: ReactNode;
     secondary: ReactNode;
     primaryWeight?: number;
     secondaryWeight?: number;
+    carPreset?: DisplaySplitPreset;
     showDivider?: boolean;
     style?: StyleProp<ViewStyle>;
     primaryStyle?: StyleProp<ViewStyle>;
@@ -19,16 +25,24 @@ export default function ResponsiveSplitView(props: IResponsiveSplitViewProps) {
         secondary,
         primaryWeight = 38,
         secondaryWeight = 62,
+        carPreset,
         showDivider = true,
         style,
         primaryStyle,
         secondaryStyle,
     } = props;
     const colors = useColors();
+    const displayMetrics = useDisplayMetrics();
+    const weights = resolveDisplaySplitWeights(
+        carPreset,
+        displayMetrics.isCarMode,
+        primaryWeight,
+        secondaryWeight,
+    );
 
     return (
         <View style={[styles.wrapper, style]}>
-            <View style={[styles.pane, { flex: primaryWeight }, primaryStyle]}>
+            <View style={[styles.pane, { flex: weights.primary }, primaryStyle]}>
                 {primary}
             </View>
             <View
@@ -36,7 +50,7 @@ export default function ResponsiveSplitView(props: IResponsiveSplitViewProps) {
                     styles.pane,
                     showDivider ? styles.secondaryWithDivider : null,
                     showDivider ? { borderLeftColor: colors.divider } : null,
-                    { flex: secondaryWeight },
+                    { flex: weights.secondary },
                     secondaryStyle,
                 ]}>
                 {secondary}

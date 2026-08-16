@@ -85,7 +85,7 @@ function HomeDrawer(props: any) {
     return (
         <>
             <PageBackground />
-            <DrawerContentScrollView {...[props]} style={style.scrollWrapper}>
+            <DrawerContentScrollView {...props} style={style.scrollWrapper}>
                 <View
                     style={[
                         style.header,
@@ -95,11 +95,17 @@ function HomeDrawer(props: any) {
                                     displayMetrics.scaleRpx(120),
                                     displayMetrics.appBarHeight,
                                 ),
-                                marginLeft: displayMetrics.horizontalPadding,
+                                paddingHorizontal:
+                                    displayMetrics.horizontalPadding,
                             }
                             : null,
                     ]}>
-                    <ThemeText fontSize="appbar" fontWeight="bold">
+                    <ThemeText
+                        fontSize="appbar"
+                        fontWeight="bold"
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.72}>
                         {DeviceInfo.getApplicationName()}
                     </ThemeText>
                     {/* <IconButton icon={'qrcode-scan'} size={rpx(36)} /> */}
@@ -255,7 +261,7 @@ const style = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        marginLeft: rpx(24),
+        paddingHorizontal: rpx(24),
     },
     card: {
         marginBottom: rpx(24),

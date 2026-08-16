@@ -161,6 +161,7 @@ export default function PluginSubscribe() {
                 <AppBar>{t("pluginSetting.menu.subscriptionSetting")}</AppBar>
                 <HorizontalSafeAreaView style={globalStyle.flex1}>
                     <ResponsiveSplitView
+                        carPreset="secondaryActions"
                         primary={subscribeList}
                         secondary={
                             <View style={style.actionRail}>
@@ -195,7 +196,7 @@ export default function PluginSubscribe() {
 
 const style = StyleSheet.create({
     wrapper: {
-        width: rpx(750),
+        width: "100%",
         flex: 1,
     },
     listWrapper: {

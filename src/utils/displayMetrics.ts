@@ -20,6 +20,46 @@ export type DisplayListHeightKey =
 
 export type DisplayOverlayKind = "drawer" | "panel" | "dialog";
 
+export type DisplaySplitPreset =
+    | "navigation"
+    | "home"
+    | "metadata"
+    | "player"
+    | "secondaryActions"
+    | "balanced";
+
+export interface DisplaySplitWeights {
+    primary: number;
+    secondary: number;
+}
+
+export const displaySplitPresets: Record<
+    DisplaySplitPreset,
+    DisplaySplitWeights
+> = {
+    navigation: { primary: 24, secondary: 76 },
+    home: { primary: 28, secondary: 72 },
+    metadata: { primary: 30, secondary: 70 },
+    player: { primary: 42, secondary: 58 },
+    secondaryActions: { primary: 74, secondary: 26 },
+    balanced: { primary: 50, secondary: 50 },
+};
+
+export function resolveDisplaySplitWeights(
+    preset: DisplaySplitPreset | undefined,
+    isCarMode: boolean,
+    primaryWeight = 38,
+    secondaryWeight = 62,
+): DisplaySplitWeights {
+    if (isCarMode && preset) {
+        return displaySplitPresets[preset];
+    }
+    return {
+        primary: primaryWeight,
+        secondary: secondaryWeight,
+    };
+}
+
 const FONT_RPX: Record<DisplayFontKey, number> = {
     tag: 20,
     description: 22,
@@ -106,9 +146,9 @@ const OVERLAY_BOUNDS: Record<
     DisplayOverlayKind,
     { ratio: number; min: number; max: number }
 > = {
-    drawer: { ratio: 0.36, min: 360, max: 640 },
-    panel: { ratio: 0.4, min: 520, max: 960 },
-    dialog: { ratio: 0.6, min: 560, max: 1200 },
+    drawer: { ratio: 0.26, min: 200, max: 420 },
+    panel: { ratio: 0.42, min: 360, max: 720 },
+    dialog: { ratio: 0.58, min: 420, max: 960 },
 };
 
 export interface DisplayMetrics {

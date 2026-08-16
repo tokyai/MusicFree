@@ -31,6 +31,7 @@ export default function SheetMusicList() {
         <HorizontalSafeAreaView style={globalStyle.flex1}>
             {orientation === "horizontal" ? (
                 <ResponsiveSplitView
+                    carPreset="metadata"
                     primary={<Header landscape />}
                     secondary={musicList}
                 />

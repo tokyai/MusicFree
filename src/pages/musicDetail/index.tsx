@@ -44,6 +44,7 @@ export default function MusicDetail() {
                 <View style={style.bodyWrapper}>
                     {orientation === "horizontal" ? (
                         <ResponsiveSplitView
+                            carPreset="player"
                             primary={playerPane}
                             secondary={<Lyric />}
                             primaryWeight={50}

@@ -42,7 +42,6 @@ export default function PluginSort() {
                         ? {
                             height: itemHeight,
                             minHeight: displayMetrics.minTouchTarget,
-                            width: "100%",
                             paddingHorizontal:
                                 displayMetrics.horizontalPadding,
                         }
@@ -78,6 +77,7 @@ export default function PluginSort() {
                 <AppBar>{t("pluginSetting.menu.sort")}</AppBar>
                 <HorizontalSafeAreaView style={globalStyle.flex1}>
                     <ResponsiveSplitView
+                        carPreset="secondaryActions"
                         primary={sortableList}
                         secondary={
                             <View style={style.actionRail}>
@@ -130,7 +130,8 @@ const style = StyleSheet.create({
     },
     sortItem: {
         height: ITEM_HEIGHT,
-        width: rpx(500),
+        width: "100%",
+        minWidth: 0,
         paddingLeft: rpx(24),
         justifyContent: "center",
     },

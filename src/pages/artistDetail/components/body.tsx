@@ -10,6 +10,8 @@ import content from "./content";
 import useColors from "@/hooks/useColors";
 import { useI18N } from "@/core/i18n";
 import useOrientation from "@/hooks/useOrientation";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { resolveDisplaySplitWeights } from "@/utils/displayMetrics";
 
 const sceneMap: Record<string, React.FC> = {
     album: BodyContentWrapper,
@@ -35,6 +37,14 @@ export default function Body() {
     const { t } = useI18N();
     const orientation = useOrientation();
     const { width } = useWindowDimensions();
+    const displayMetrics = useDisplayMetrics();
+    const splitWeights = resolveDisplaySplitWeights(
+        "metadata",
+        displayMetrics.isCarMode,
+    );
+    const secondaryPaneRatio =
+        splitWeights.secondary /
+        (splitWeights.primary + splitWeights.secondary);
 
     return (
         <TabView
@@ -74,7 +84,7 @@ export default function Body() {
             renderScene={SceneMap(sceneMap)}
             onIndexChange={setIndex}
             initialLayout={{
-                width: orientation === "horizontal" ? width * 0.62 : width,
+                width: orientation === "horizontal" ? width * secondaryPaneRatio : width,
             }}
         />
     );
@@ -102,6 +112,9 @@ export function BodyContentWrapper(props: any) {
 
 const style = StyleSheet.create({
     wrapper: {
+        flex: 1,
+        minWidth: 0,
+        minHeight: 0,
         zIndex: 100,
     },
     transparentColor: {

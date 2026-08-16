@@ -105,3 +105,37 @@ Installed Trellis for MusicFree and documented source-backed frontend and native
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: 车机共存包、FTP备份与横屏大屏适配
+
+**Date**: 2026-08-16
+**Task**: 车机共存包、FTP备份与横屏大屏适配
+**Branch**: `master`
+
+### Summary
+
+完成车机共存 applicationId 与显示名、FTP/FTPS 备份还原原生桥接和数据校验，移除车机上会触发系统文件选择器的入口；新增语义化车机横屏分栏、抽屉/面板边界和大屏布局适配，并通过 TypeScript、46 项 Jest、ESLint、Android Kotlin 编译及 diff 检查。补充 FTP 轮换取消回滚与车机布局规范。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e2374b3` | (see git log) |
+| `88cd1a2` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

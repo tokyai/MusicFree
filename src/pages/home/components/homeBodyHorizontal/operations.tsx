@@ -1,5 +1,6 @@
 import { useI18N } from "@/core/i18n";
 import { ROUTE_PATH, useNavigate } from "@/core/router";
+import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 import rpx from "@/utils/rpx";
 import React from "react";
 import { StyleSheet } from "react-native";
@@ -9,6 +10,8 @@ import ActionButton from "../ActionButton";
 export default function Operations() {
     const navigate = useNavigate();
     const { t } = useI18N();
+    const displayMetrics = useDisplayMetrics();
+    const isCarMode = displayMetrics.isCarMode;
 
     const actionButtons = [
         {
@@ -44,11 +47,26 @@ export default function Operations() {
     return (
         <ScrollView
             style={styles.container}
-            contentContainerStyle={styles.content}
+            contentContainerStyle={[
+                styles.content,
+                isCarMode ? styles.carContent : null,
+                isCarMode
+                    ? {
+                        gap: displayMetrics.scaleRpx(12),
+                        paddingHorizontal: displayMetrics.horizontalPadding,
+                        paddingVertical: displayMetrics.scaleRpx(20),
+                    }
+                    : null,
+            ]}
             showsVerticalScrollIndicator={false}>
             {actionButtons.map(action => (
                 <ActionButton
-                    style={styles.actionButtonStyle}
+                    variant={isCarMode ? "rail" : "tile"}
+                    style={
+                        isCarMode
+                            ? styles.carActionButtonStyle
+                            : styles.actionButtonStyle
+                    }
                     key={action.title}
                     {...action}
                 />
@@ -70,10 +88,21 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         gap: rpx(16),
     },
+    carContent: {
+        flexDirection: "column",
+        flexWrap: "nowrap",
+        justifyContent: "flex-start",
+    },
     actionButtonStyle: {
         width: "46%",
         height: rpx(160),
         borderRadius: rpx(18),
         flexGrow: 0,
+    },
+    carActionButtonStyle: {
+        width: "100%",
+        flexGrow: 0,
+        flexShrink: 1,
+        borderRadius: rpx(12),
     },
 });

@@ -36,6 +36,33 @@ describe("display metrics", () => {
         },
     );
 
+    it.each([
+        ["medium", 18, 56],
+        ["large", 20, 64],
+    ] as Array<["medium" | "large", number, number]>) (
+        "keeps the 731dp landscape car rail readable at the %s tier",
+        (tier, minimumSubtitleSize, minimumTouchTarget) => {
+            const metrics = getDisplayMetrics(1280, 731, true, tier);
+
+            expect(metrics.fontSizes.subTitle).toBeGreaterThanOrEqual(
+                minimumSubtitleSize,
+            );
+            expect(metrics.navigationItemHeight).toBeGreaterThanOrEqual(
+                minimumTouchTarget,
+            );
+            expect(metrics.horizontalPadding).toBeGreaterThan(0);
+        },
+    );
+
+    it("keeps phone landscape metrics independent from the car rail tier", () => {
+        const medium = getDisplayMetrics(1280, 731, false, "medium");
+        const large = getDisplayMetrics(1280, 731, false, "large");
+
+        expect(medium.minTouchTarget).toBe(0);
+        expect(large.minTouchTarget).toBe(0);
+        expect(large.fontSizes.subTitle).toBe(medium.fontSizes.subTitle);
+    });
+
     it("keeps all lyric selections distinct and above the selected tier minimum", () => {
         const metrics = getDisplayMetrics(360, 640, true, "large");
 

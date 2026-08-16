@@ -120,18 +120,20 @@ function BottomIcon(props: IBottomIconProps) {
     const { icon, title, onPress, color = "text", landscape = false } = props;
     const colors = useColors();
     const displayMetrics = useDisplayMetrics();
+    const carLandscape = landscape && displayMetrics.isCarMode;
     return (
         <Pressable
             onPress={onPress}
             style={[
                 style.bottomIconWrapper,
                 landscape ? style.landscapeIconWrapper : null,
+                landscape && !carLandscape
+                    ? style.landscapeFixedIconWrapper
+                    : null,
+                carLandscape ? style.carLandscapeIconWrapper : null,
                 displayMetrics.isCarMode
                     ? {
                         minHeight: displayMetrics.minTouchTarget,
-                        height: landscape
-                            ? displayMetrics.minTouchTarget
-                            : undefined,
                         paddingVertical: displayMetrics.scaleRpx(8),
                     }
                     : null,
@@ -142,16 +144,28 @@ function BottomIcon(props: IBottomIconProps) {
                 color={colors.appBarText}
                 style={color === "textSecondary" ? style.opacity_06 : undefined}
                 size={
-                    displayMetrics.isCarMode
-                        ? displayMetrics.iconSizes.big
-                        : iconSizeConst.big
+                    carLandscape
+                        ? displayMetrics.iconSizes.light
+                        : displayMetrics.isCarMode
+                            ? displayMetrics.iconSizes.big
+                            : iconSizeConst.big
                 }
             />
             <ThemeText
                 fontSize="subTitle"
                 fontColor={"appBarText"}
                 opacity={color === "textSecondary" ? 0.6 : undefined}
-                style={style.bottomIconText}>
+                numberOfLines={carLandscape ? 1 : landscape ? 2 : undefined}
+                ellipsizeMode={landscape ? "tail" : undefined}
+                adjustsFontSizeToFit={landscape}
+                minimumFontScale={landscape ? 0.75 : undefined}
+                style={[
+                    style.bottomIconText,
+                    landscape && !carLandscape
+                        ? style.landscapeBottomIconText
+                        : null,
+                    carLandscape ? style.carLandscapeBottomIconText : null,
+                ]}>
                 {title}
             </ThemeText>
         </Pressable>
@@ -168,6 +182,7 @@ const style = StyleSheet.create({
         height: "auto",
         flex: 1,
         flexDirection: "column",
+        minHeight: 0,
     },
 
     bottomIconWrapper: {
@@ -179,11 +194,35 @@ const style = StyleSheet.create({
     landscapeIconWrapper: {
         flex: 0,
         width: "100%",
+        minWidth: 0,
         minHeight: rpx(108),
+    },
+    landscapeFixedIconWrapper: {
         height: rpx(120),
+    },
+    carLandscapeIconWrapper: {
+        flex: 1,
+        height: "auto",
+        minHeight: 0,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-start",
     },
     bottomIconText: {
         marginTop: rpx(12),
+    },
+    landscapeBottomIconText: {
+        width: "100%",
+        minWidth: 0,
+        flexShrink: 1,
+        textAlign: "center",
+    },
+    carLandscapeBottomIconText: {
+        flex: 1,
+        minWidth: 0,
+        marginTop: 0,
+        marginLeft: rpx(12),
+        textAlign: "left",
     },
     opacity_06: {
         opacity: 0.6,

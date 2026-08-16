@@ -270,6 +270,9 @@ export default function FileSelector() {
                     fontColor={"appBarText"}
                     opacity={checkedItems.length > 0 ? undefined : 0.6}
                     numberOfLines={2}
+                    ellipsizeMode="tail"
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
                     style={style.actionText}>
                     {actionText}
                     {multi && checkedItems?.length > 0
@@ -386,6 +389,7 @@ const style = StyleSheet.create({
     },
     scanBtn: {
         width: "100%",
+        minWidth: 0,
         height: rpx(120),
         alignItems: "center",
         justifyContent: "center",
@@ -412,6 +416,9 @@ const style = StyleSheet.create({
         marginTop: "auto",
     },
     actionText: {
+        width: "100%",
+        minWidth: 0,
+        flexShrink: 1,
         textAlign: "center",
         paddingHorizontal: rpx(12),
     },

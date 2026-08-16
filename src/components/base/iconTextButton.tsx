@@ -46,7 +46,13 @@ export default function (props: IProps) {
                 }
                 color={colors.text}
             />
-            <ThemeText style={style.text} fontSize={"content"}>
+            <ThemeText
+                style={style.text}
+                fontSize={"content"}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}>
                 {children}
             </ThemeText>
         </TouchableOpacity>
@@ -57,10 +63,15 @@ const style = StyleSheet.create({
     container: {
         flexDirection: "row",
         alignItems: "center",
+        minWidth: 0,
+        maxWidth: "100%",
+        flexShrink: 1,
         paddingHorizontal: rpx(16),
         paddingVertical: rpx(8),
     },
     text: {
         marginLeft: rpx(8),
+        minWidth: 0,
+        flexShrink: 1,
     },
 });

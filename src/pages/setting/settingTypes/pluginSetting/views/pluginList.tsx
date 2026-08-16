@@ -292,7 +292,8 @@ export default function PluginList() {
                             <View style={style.actionRail}>
                                 <IconTextButton
                                     icon="plus"
-                                    onPress={openInstallOptions}>
+                                    onPress={openInstallOptions}
+                                    containerStyle={style.actionButton}>
                                     {t("pluginSetting.menu.installPlugin")}
                                 </IconTextButton>
                             </View>
@@ -326,7 +327,11 @@ const style = StyleSheet.create({
     },
     actionRail: {
         flex: 1,
+        minWidth: 0,
         padding: rpx(24),
+    },
+    actionButton: {
+        width: "100%",
     },
 });
 

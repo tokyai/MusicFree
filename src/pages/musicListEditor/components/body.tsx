@@ -29,24 +29,39 @@ export default function Body() {
         useAtom(musicListChangedAtom);
     const orientation = useOrientation();
     const displayMetrics = useDisplayMetrics();
+    const carLandscape =
+        orientation === "horizontal" && displayMetrics.isCarMode;
     const selectedItems = useMemo(
         () => editingMusicList.filter(_ => _.checked),
         [editingMusicList],
     );
+    const selectActionTitle =
+        selectedItems.length !== editingMusicList.length &&
+        editingMusicList.length
+            ? t("common.selectAll")
+            : t("common.unselectAll");
     const header = (
         <View
             style={[
                 style.header,
                 orientation === "horizontal" ? style.landscapeHeader : null,
+                carLandscape ? style.carLandscapeHeader : null,
                 displayMetrics.isCarMode
                     ? {
                         minHeight: displayMetrics.minTouchTarget,
-                        paddingHorizontal: displayMetrics.horizontalPadding,
+                        paddingHorizontal: carLandscape
+                            ? displayMetrics.scaleRpx(8)
+                            : displayMetrics.horizontalPadding,
+                    }
+                    : null,
+                displayMetrics.isCarMode && !carLandscape
+                    ? {
                         paddingVertical: displayMetrics.scaleRpx(12),
                     }
                     : null,
             ]}>
             <Button
+                style={carLandscape ? style.carHeaderSelectButton : null}
                 onPress={() => {
                     if (
                         selectedItems.length !== editingMusicList.length &&
@@ -67,13 +82,15 @@ export default function Body() {
                         );
                     }
                 }}>
-                {`${selectedItems.length !== editingMusicList.length &&
-                        editingMusicList.length
-                    ? t("common.selectAll")
-                    : t("common.unselectAll")
-                } (${t("musicListEditor.selectMusicCount", { count: selectedItems.length })})`}
+                {carLandscape
+                    ? `${selectActionTitle} (${selectedItems.length})`
+                    : `${selectActionTitle} (${t(
+                        "musicListEditor.selectMusicCount",
+                        { count: selectedItems.length },
+                    )})`}
             </Button>
             <Button
+                style={carLandscape ? style.carHeaderSaveButton : null}
                 fontColor={
                     musicListChanged && musicSheet?.id
                         ? "primary"
@@ -147,6 +164,22 @@ const style = StyleSheet.create({
         alignItems: "stretch",
         gap: rpx(16),
         paddingVertical: rpx(24),
+    },
+    carLandscapeHeader: {
+        flexDirection: "row",
+        alignItems: "stretch",
+        gap: rpx(8),
+        paddingVertical: 0,
+    },
+    carHeaderSelectButton: {
+        flex: 2,
+        minWidth: 0,
+        alignItems: "center",
+    },
+    carHeaderSaveButton: {
+        flex: 1,
+        minWidth: 0,
+        alignItems: "center",
     },
     actionRail: {
         flex: 1,

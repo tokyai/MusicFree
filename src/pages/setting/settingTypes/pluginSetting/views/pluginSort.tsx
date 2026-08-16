@@ -137,10 +137,12 @@ const style = StyleSheet.create({
     },
     actionRail: {
         flex: 1,
+        minWidth: 0,
         padding: rpx(24),
         alignItems: "flex-start",
     },
     actionButton: {
+        width: "100%",
         marginTop: rpx(24),
     },
 });

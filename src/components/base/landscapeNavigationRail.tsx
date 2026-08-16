@@ -59,7 +59,11 @@ export default function LandscapeNavigationRail(
                             style={styles.sectionTitle}
                             fontSize="subTitle"
                             fontColor="textSecondary"
-                            fontWeight="bold">
+                            fontWeight="bold"
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.8}>
                             {section.title}
                         </ThemeText>
                     ) : null}
@@ -93,7 +97,11 @@ export default function LandscapeNavigationRail(
                                     item.disabled ? styles.disabled : null,
                                 ]}>
                                 <ThemeText
+                                    style={styles.itemText}
                                     numberOfLines={2}
+                                    ellipsizeMode="tail"
+                                    adjustsFontSizeToFit
+                                    minimumFontScale={0.8}
                                     fontColor={selected ? "primary" : "text"}
                                     fontWeight={selected ? "bold" : "regular"}>
                                     {item.title}
@@ -113,11 +121,14 @@ const styles = StyleSheet.create({
         minWidth: 0,
     },
     content: {
+        width: "100%",
+        minWidth: 0,
         paddingHorizontal: rpx(16),
         paddingVertical: rpx(20),
     },
     section: {
         width: "100%",
+        minWidth: 0,
     },
     sectionSpacing: {
         marginTop: rpx(28),
@@ -128,6 +139,7 @@ const styles = StyleSheet.create({
     },
     item: {
         width: "100%",
+        minWidth: 0,
         minHeight: rpx(72),
         borderLeftWidth: rpx(6),
         borderRadius: rpx(6),
@@ -135,6 +147,12 @@ const styles = StyleSheet.create({
         paddingVertical: rpx(14),
         justifyContent: "center",
         marginBottom: rpx(8),
+    },
+    itemText: {
+        width: "100%",
+        alignSelf: "stretch",
+        minWidth: 0,
+        flexShrink: 1,
     },
     unselectedItem: {
         backgroundColor: "transparent",

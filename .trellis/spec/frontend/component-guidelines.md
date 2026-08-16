@@ -52,6 +52,37 @@
 </HorizontalSafeAreaView>
 ```
 
+### Narrow Rail Text Contract
+
+- Labels inside sidebars, navigation rails, and narrow action panes must have
+  an explicit width boundary. Set `minWidth: 0` on the row and text, stretch
+  the row to the pane width, and let the text shrink within the remaining
+  space.
+- Bound long labels with one or two lines plus tail ellipsis or font fitting.
+  A centered `Text` without a width boundary can be measured at one glyph wide
+  on Android, which makes Chinese labels wrap vertically one character at a
+  time.
+- Car-mode rows must also preserve the shared `navigationItemHeight` or
+  `minTouchTarget`; text fitting must not reduce the touch target.
+
+```tsx
+<Pressable style={styles.railItem}>
+    <Icon name="folder" />
+    <ThemeText
+        style={styles.railText}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+        adjustsFontSizeToFit>
+        {title}
+    </ThemeText>
+</Pressable>
+
+const styles = StyleSheet.create({
+    railItem: { width: "100%", minWidth: 0, flexDirection: "row" },
+    railText: { flex: 1, minWidth: 0, flexShrink: 1 },
+});
+```
+
 ## Scenario: Semantic Car Display Splits
 
 ### 1. Scope / Trigger

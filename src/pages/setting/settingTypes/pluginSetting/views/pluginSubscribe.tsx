@@ -167,7 +167,8 @@ export default function PluginSubscribe() {
                             <View style={style.actionRail}>
                                 <IconTextButton
                                     icon="plus"
-                                    onPress={openAddDialog}>
+                                    onPress={openAddDialog}
+                                    containerStyle={style.actionButton}>
                                     {t("pluginSetting.menu.subscriptionSetting")}
                                 </IconTextButton>
                             </View>
@@ -204,7 +205,11 @@ const style = StyleSheet.create({
     },
     actionRail: {
         flex: 1,
+        minWidth: 0,
         padding: rpx(24),
+    },
+    actionButton: {
+        width: "100%",
     },
     fab: {
         position: "absolute",

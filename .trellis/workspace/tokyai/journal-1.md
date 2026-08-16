@@ -139,3 +139,36 @@ Installed Trellis for MusicFree and documented source-backed frontend and native
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: 车机侧栏文字溢出修复
+
+**Date**: 2026-08-17
+**Task**: 车机侧栏文字溢出修复
+**Branch**: `master`
+
+### Summary
+
+修复车机横屏首页侧栏及共享窄栏的文字测量与溢出问题，完成中大字号模拟器验证并生成 Debug/Release 通用 APK。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4336073` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

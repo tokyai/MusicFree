@@ -577,4 +577,4 @@ export function usePluginEnabled(plugin: Plugin) {
 }
 
 export default pluginManager;
-export { Plugin };
+export { Plugin, PluginState };

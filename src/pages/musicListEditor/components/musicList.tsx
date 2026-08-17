@@ -16,6 +16,9 @@ import useColors from "@/hooks/useColors";
 import Empty from "@/components/base/empty";
 import useOrientation from "@/hooks/useOrientation";
 import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { FlashList } from "@shopify/flash-list";
+import globalStyle from "@/constants/globalStyle";
+import { getMediaUniqueKey } from "@/utils/mediaUtils";
 
 const ITEM_HEIGHT = rpx(120);
 
@@ -24,9 +27,16 @@ interface IMusicEditorItemProps {
     editorMusicItem: IEditorMusicItem;
     tableMode?: boolean;
     compactTable?: boolean;
+    sortable?: boolean;
 }
 function _MusicEditorItem(props: IMusicEditorItemProps) {
-    const { index, editorMusicItem, tableMode, compactTable } = props;
+    const {
+        index,
+        editorMusicItem,
+        tableMode,
+        compactTable,
+        sortable = true,
+    } = props;
     const setEditingMusicList = useSetAtom(editingMusicListAtom);
 
     const onPress = useCallback(() => {
@@ -35,7 +45,7 @@ function _MusicEditorItem(props: IMusicEditorItemProps) {
                 draft[index].checked = !draft[index].checked;
             }),
         );
-    }, [index]);
+    }, [index, setEditingMusicList]);
 
     return (
         <MusicItem
@@ -46,7 +56,7 @@ function _MusicEditorItem(props: IMusicEditorItemProps) {
                 </View>
             )}
             showMoreIcon={false}
-            itemPaddingRight={rpx(100)}
+            itemPaddingRight={sortable ? rpx(100) : undefined}
             onItemPress={onPress}
             tableMode={tableMode}
             compactTable={compactTable}
@@ -60,12 +70,18 @@ const MusicEditorItem = memo(
         prev.editorMusicItem === curr.editorMusicItem &&
         prev.index === curr.index &&
         prev.tableMode === curr.tableMode &&
-        prev.compactTable === curr.compactTable,
+        prev.compactTable === curr.compactTable &&
+        prev.sortable === curr.sortable,
 );
 
 /** 音乐列表 */
 const marginTop = rpx(88) * 2 + (StatusBar.currentHeight ?? 0);
-export default function MusicList() {
+interface IMusicListProps {
+    sortable?: boolean;
+}
+
+export default function MusicList(props: IMusicListProps) {
+    const { sortable = true } = props;
     const [editingMusicList, setEditingMusicList] =
         useAtom(editingMusicListAtom);
     const setMusicListChanged = useSetAtom(musicListChangedAtom);
@@ -86,14 +102,19 @@ export default function MusicList() {
                     index={index!}
                     tableMode={orientation === "horizontal"}
                     compactTable={orientation === "horizontal"}
+                    sortable={sortable}
                 />
             );
         },
-        [editingMusicList, orientation],
+        [orientation, sortable],
     );
     const colors = useColors();
 
-    return editingMusicList?.length ? (
+    if (!editingMusicList?.length) {
+        return <Empty />;
+    }
+
+    return sortable ? (
         <SortableFlatList
             activeBackgroundColor={colors.placeholder}
             marginTop={orientation === "horizontal" ? 0 : resolvedMarginTop}
@@ -106,7 +127,14 @@ export default function MusicList() {
             }}
         />
     ) : (
-        <Empty />
+        <View style={globalStyle.fwflex1}>
+            <FlashList
+                data={editingMusicList}
+                estimatedItemSize={itemHeight}
+                keyExtractor={item => getMediaUniqueKey(item.musicItem)}
+                renderItem={renderItem}
+            />
+        </View>
     );
 }
 

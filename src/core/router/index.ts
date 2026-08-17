@@ -56,7 +56,11 @@ type RouterParamsBase = Record<RoutePaths, any>;
 interface RouterParams extends RouterParamsBase {
     home: undefined;
     "music-detail": undefined;
-    "search-page": undefined;
+    "search-page":
+        | {
+            initialQuery: string;
+        }
+        | undefined;
     "local-sheet-detail": {
         id: string;
     };
@@ -80,6 +84,7 @@ interface RouterParams extends RouterParamsBase {
     "music-list-editor": {
         musicSheet?: Partial<IMusic.IMusicSheetItem>;
         musicList: IMusic.IMusicItem[] | null;
+        mode?: "edit" | "source-switch";
     };
     "file-selector": {
         fileType?: "folder" | "file" | "file-and-folder"; // 10: folder 11: file and folder,
@@ -122,7 +127,7 @@ export function useNavigate() {
     ) {
         navigation.navigate(route, params);
     },
-    []);
+    [navigation]);
 
     return navigate;
 }

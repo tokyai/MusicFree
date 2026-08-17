@@ -10,7 +10,8 @@ import Body from "./components/body";
 import { editingMusicListAtom, musicListChangedAtom } from "./store/atom";
 
 export default function MusicListEditor() {
-    const { musicSheet, musicList } = useParams<"music-list-editor">();
+    const { musicSheet, musicList, mode = "edit" } =
+        useParams<"music-list-editor">();
 
     const setEditingMusicList = useSetAtom(editingMusicListAtom);
     const setMusicListChanged = useSetAtom(musicListChangedAtom);
@@ -28,7 +29,11 @@ export default function MusicListEditor() {
     return (
         <VerticalSafeAreaView style={globalStyle.fwflex1}>
             <StatusBar />
-            <AppBar>{musicSheet?.title ?? i18n.t("common.sheet")}</AppBar>
+            <AppBar>
+                {mode === "source-switch"
+                    ? i18n.t("musicListEditor.sourceSwitch")
+                    : musicSheet?.title ?? i18n.t("common.sheet")}
+            </AppBar>
             <Body />
         </VerticalSafeAreaView>
     );

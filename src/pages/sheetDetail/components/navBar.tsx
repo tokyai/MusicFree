@@ -39,6 +39,18 @@ export default function () {
                         },
                     },
                     {
+                        icon: "arrows-left-right",
+                        title: t("sheetDetail.batchSourceSwitch"),
+                        show: id === "favorite",
+                        onPress() {
+                            navigation.navigate(ROUTE_PATH.MUSIC_LIST_EDITOR, {
+                                musicList: musicSheet.musicList,
+                                musicSheet: musicSheet,
+                                mode: "source-switch",
+                            });
+                        },
+                    },
+                    {
                         icon: "sort-outline",
                         title: t("sheetDetail.sortMusic"),
                         onPress() {

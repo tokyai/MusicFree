@@ -93,6 +93,10 @@ export interface ILanguageData {
     "toast.addToNextPlay": string; // 添加到下一曲
     "toast.beginDownload": string; // 开始下载
     "toast.rememberToSave": string; // 请记得保存
+    "toast.sourceSwitchNoSelection": string; // 未选择换源歌曲
+    "toast.sourceSwitchNoPlugin": string; // 没有可用的目标音源
+    "toast.sourceSwitchFailed": string; // 批量换源失败
+    "toast.sourceSwitchSummary": string; // 批量换源结果摘要
 
     // 本地音乐相关
     "localMusic.scanLocalMusic": string; // 扫描本地音乐
@@ -110,6 +114,9 @@ export interface ILanguageData {
     "musicListEditor.selectMusicCount": string; // 选择的音乐数量
     "musicListEditor.addToNextPlay": string; // 添加到下一曲
     "musicListEditor.addToSheet": string; // 添加到歌单
+    "musicListEditor.sourceSwitch": string; // 批量换源
+    "musicListEditor.sourceSwitching": string; // 正在换源
+    "musicListEditor.sourceSwitchTarget": string; // 选择目标音源
 
     // 权限设置相关
     "permissionSetting.title": string; // 权限设置
@@ -140,6 +147,7 @@ export interface ILanguageData {
     "sheetDetail.totalMusicCount": string; // 歌曲总数
     "sheetDetail.editSheetInfo": string; // 编辑歌单信息
     "sheetDetail.batchEditMusic": string; // 批量编辑音乐
+    "sheetDetail.batchSourceSwitch": string; // 批量换源
     "sheetDetail.sortMusic": string; // 排序音乐
     "sheetDetail.sortMusicOption.byTitle": string; // 按标题排序
     "sheetDetail.sortMusicOption.byArtist": string; // 按艺术家排序

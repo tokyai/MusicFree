@@ -40,6 +40,7 @@ export default function MusicResultItem(props: IMusicResultsProps) {
             }}
             tableMode={tableMode}
             compactTable={compactTable}
+            showArtwork
         />
     );
 }

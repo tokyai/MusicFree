@@ -2,6 +2,11 @@ import { SortType } from "@/constants/commonConst.ts";
 import { isSameMediaItem } from "@/utils/mediaUtils";
 import { createMediaIndexMap } from "@/utils/mediaIndexMap.ts";
 
+export interface IMusicItemReplacement {
+    original: IMusic.IMusicItem;
+    replacement: IMusic.IMusicItem;
+}
+
 // Bug: localeCompare is slow sometimes https://github.com/facebook/hermes/issues/867
 const collator = new Intl.Collator("zh");
 
@@ -106,6 +111,45 @@ export default class SortedMusicList {
     manualSort(newMusicItems: IMusic.IMusicItem[]) {
         this.array = newMusicItems;
         this.sortType = SortType.None;
+    }
+
+    /** 替换歌曲来源并重建平台/ID索引，保留数组当前位置。 */
+    replace(replacements: IMusicItemReplacement[]) {
+        const currentKeys = new Set(
+            this.array.map(item => `${item.platform}@${item.id}`),
+        );
+        const reservedTargetKeys = new Set<string>();
+        const accepted = new Map<string, IMusic.IMusicItem>();
+
+        for (const item of replacements) {
+            const originalKey = `${item.original.platform}@${item.original.id}`;
+            const target = item.replacement;
+            const targetKey = `${target?.platform ?? ""}@${target?.id ?? ""}`;
+            if (
+                !currentKeys.has(originalKey) ||
+                !target?.platform ||
+                !target?.id ||
+                targetKey === originalKey ||
+                currentKeys.has(targetKey) ||
+                reservedTargetKeys.has(targetKey)
+            ) {
+                continue;
+            }
+            accepted.set(originalKey, target);
+            reservedTargetKeys.add(targetKey);
+        }
+
+        if (!accepted.size) {
+            return 0;
+        }
+
+        this.array = this.array.map(item =>
+            accepted.get(`${item.platform}@${item.id}`) ?? item,
+        );
+        this.countMap.clear();
+        this.addToCountMap(this.array);
+        this.sortType = SortType.None;
+        return accepted.size;
     }
 
     add(musicItems: IMusic.IMusicItem[]) {

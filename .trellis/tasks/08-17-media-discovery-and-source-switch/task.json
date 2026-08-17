@@ -1,0 +1,30 @@
+{
+  "id": "media-discovery-and-source-switch",
+  "name": "media-discovery-and-source-switch",
+  "title": "完善搜索、详情导航与收藏批量换源",
+  "description": "",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P2",
+  "creator": "tokyai",
+  "assignee": "tokyai",
+  "createdAt": "2026-08-17",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "master",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [
+    "08-17-search-result-covers",
+    "08-17-player-metadata-search-navigation",
+    "08-17-favorite-batch-source-switch"
+  ],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}

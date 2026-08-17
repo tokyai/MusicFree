@@ -11,7 +11,7 @@ import FastImage from "@/components/base/fastImage";
 import Toast from "@/utils/toast";
 import LocalMusicSheet from "@/core/localMusicSheet";
 import { localMusicSheetId, musicHistorySheetId } from "@/constants/commonConst";
-import { ROUTE_PATH } from "@/core/router";
+import { ROUTE_PATH, useNavigate } from "@/core/router";
 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import PanelBase from "../base/panelBase";
@@ -54,6 +54,9 @@ interface IOption {
 export default function MusicItemOptions(props: IMusicItemOptionsProps) {
     const { musicItem, musicSheet, from } = props ?? {};
     const { t } = useI18N();
+    const navigate = useNavigate();
+    const artist = musicItem?.artist?.toString().trim();
+    const album = musicItem?.album?.toString().trim();
 
     const safeAreaInsets = useSafeAreaInsets();
     const displayMetrics = useDisplayMetrics();
@@ -85,27 +88,30 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
         },
         {
             icon: "user",
-            title: t("panel.musicItemOptions.author", { artist: musicItem.artist }),
+            show: !!artist,
+            title: t("panel.musicItemOptions.author", { artist }),
             onPress: () => {
-                try {
-                    Clipboard.setString(musicItem.artist.toString());
-                    Toast.success(t("toast.copiedToClipboard"));
-                } catch {
-                    Toast.warn(t("toast.copiedToClipboardFailed"));
+                if (!artist) {
+                    return;
                 }
+                hidePanel();
+                navigate(ROUTE_PATH.SEARCH_PAGE, {
+                    initialQuery: artist,
+                });
             },
         },
         {
             icon: "album-outline",
-            show: !!musicItem.album,
-            title: t("panel.musicItemOptions.album", { album: musicItem.album }),
+            show: !!album,
+            title: t("panel.musicItemOptions.album", { album }),
             onPress: () => {
-                try {
-                    Clipboard.setString(musicItem.album.toString());
-                    Toast.success(t("toast.copiedToClipboard"));
-                } catch {
-                    Toast.warn(t("toast.copiedToClipboardFailed"));
+                if (!album) {
+                    return;
                 }
+                hidePanel();
+                navigate(ROUTE_PATH.SEARCH_PAGE, {
+                    initialQuery: album,
+                });
             },
         },
         {

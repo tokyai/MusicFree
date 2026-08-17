@@ -14,10 +14,20 @@ interface ILoadingDialogProps<T extends any = any> {
     onResolve?: (data: T, hideDialog: () => void) => void;
     onReject?: (reason: any, hideDialog: () => void) => void;
     onCancel?: (hideDialog: () => void) => void;
+    /** 将返回键或点击遮罩视为取消，避免异步任务在对话框关闭后继续提交。 */
+    cancelOnDismiss?: boolean;
 }
 export default function LoadingDialog(props: ILoadingDialogProps) {
-    const { title, loadingText, onResolve, onReject, promise, task, onCancel } =
-        props;
+    const {
+        title,
+        loadingText,
+        onResolve,
+        onReject,
+        promise,
+        task,
+        onCancel,
+        cancelOnDismiss = false,
+    } = props;
     
     const { t } = useI18N();
 
@@ -33,7 +43,14 @@ export default function LoadingDialog(props: ILoadingDialogProps) {
     }, []);
 
     return (
-        <Dialog onDismiss={hideDialog}>
+        <Dialog
+            onDismiss={() => {
+                if (cancelOnDismiss) {
+                    onCancel?.(hideDialog);
+                } else {
+                    hideDialog();
+                }
+            }}>
             <Dialog.Title>{title}</Dialog.Title>
             <Dialog.Content style={style.content}>
                 <Loading text={loadingText || t("common.loading")} />

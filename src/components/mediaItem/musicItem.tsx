@@ -10,6 +10,7 @@ import ThemeText from "../base/themeText";
 import TrackPlayer from "@/core/trackPlayer";
 import Icon from "@/components/base/icon.tsx";
 import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { ImgAsset } from "@/constants/assetsConst";
 
 interface IMusicItemProps {
     index?: string | number;
@@ -26,6 +27,8 @@ interface IMusicItemProps {
     tableMode?: boolean;
     /** 在较窄的横屏窗格中隐藏次要列 */
     compactTable?: boolean;
+    /** 展示歌曲封面 */
+    showArtwork?: boolean;
 }
 export default function MusicItem(props: IMusicItemProps) {
     const {
@@ -41,6 +44,7 @@ export default function MusicItem(props: IMusicItemProps) {
         highlight = false,
         tableMode = false,
         compactTable = false,
+        showArtwork = false,
     } = props;
     const displayMetrics = useDisplayMetrics();
     const checkIconSize = displayMetrics.isCarMode
@@ -62,6 +66,22 @@ export default function MusicItem(props: IMusicItemProps) {
         });
     };
 
+    const artwork = showArtwork ? (
+        <ListItem.ListItemImage
+            uri={musicItem.artwork}
+            fallbackImg={ImgAsset.albumDefault}
+            imageSize={compactTable ? rpx(64) : rpx(72)}
+            containerStyle={compactTable ? styles.compactArtwork : undefined}
+            contentStyle={
+                displayMetrics.isCarMode
+                    ? undefined
+                    : compactTable
+                        ? styles.compactArtworkImage
+                        : styles.artworkImage
+            }
+        />
+    ) : null;
+
     if (tableMode) {
         return (
             <ListItem
@@ -82,6 +102,7 @@ export default function MusicItem(props: IMusicItemProps) {
                         {index}
                     </ListItem.ListItemText>
                 ) : null}
+                {artwork}
                 <ListItem.Content
                     containerStyle={[
                         styles.tableTitle,
@@ -127,7 +148,12 @@ export default function MusicItem(props: IMusicItemProps) {
                     numberOfLines={1}
                     fontSize="description"
                     fontColor="textSecondary"
-                    style={styles.tableSource}>
+                    style={[
+                        styles.tableSource,
+                        compactTable && showArtwork
+                            ? styles.artworkCompactSource
+                            : null,
+                    ]}>
                     {musicItem.platform || ""}
                 </ThemeText>
                 {showMoreIcon ? (
@@ -163,6 +189,7 @@ export default function MusicItem(props: IMusicItemProps) {
                     {index}
                 </ListItem.ListItemText>
             ) : null}
+            {artwork}
             <ListItem.Content
                 title={
                     <TitleAndTag
@@ -236,10 +263,26 @@ const styles = StyleSheet.create({
         flex: 1,
         minWidth: rpx(84),
     },
+    compactArtwork: {
+        marginRight: rpx(12),
+    },
+    artworkImage: {
+        width: rpx(72),
+        height: rpx(72),
+        borderRadius: rpx(14.4),
+    },
+    compactArtworkImage: {
+        width: rpx(64),
+        height: rpx(64),
+        borderRadius: rpx(12.8),
+    },
     tableSource: {
         width: rpx(108),
         flexShrink: 1,
         marginRight: rpx(8),
+    },
+    artworkCompactSource: {
+        width: rpx(80),
     },
 
     indexText: {

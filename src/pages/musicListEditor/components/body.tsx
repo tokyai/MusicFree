@@ -18,9 +18,11 @@ import useOrientation from "@/hooks/useOrientation";
 import ResponsiveSplitView from "@/components/base/responsiveSplitView";
 import Bottom from "./bottom";
 import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import SourceSwitchButton from "./sourceSwitchButton";
 
 export default function Body() {
-    const { musicSheet } = useParams<"music-list-editor">();
+    const { musicSheet, mode = "edit" } = useParams<"music-list-editor">();
+    const sourceSwitchMode = mode === "source-switch";
 
     const { t } = useI18N();
     const [editingMusicList, setEditingMusicList] =
@@ -89,36 +91,46 @@ export default function Body() {
                         { count: selectedItems.length },
                     )})`}
             </Button>
-            <Button
-                style={carLandscape ? style.carHeaderSaveButton : null}
-                fontColor={
-                    musicListChanged && musicSheet?.id
-                        ? "primary"
-                        : "textSecondary"
-                }
-                onPress={async () => {
-                    if (musicListChanged && musicSheet?.id) {
-                        if (musicSheet.id === localMusicSheetId) {
-                            await LocalMusicSheet.updateMusicList(
-                                editingMusicList.map(_ => _.musicItem),
-                            );
-                        } else if (musicSheet.id === musicHistorySheetId) {
-                            await musicHistory.setHistory(
-                                editingMusicList.map(_ => _.musicItem),
-                            );
-                        } else {
-                            await MusicSheet.manualSort(
-                                musicSheet.id,
-                                editingMusicList.map(_ => _.musicItem),
-                            );
-                        }
-
-                        Toast.success(t("toast.saveSuccess"));
-                        setMusicListChanged(false);
+            {sourceSwitchMode ? (
+                <SourceSwitchButton
+                    style={
+                        carLandscape
+                            ? style.carHeaderSaveButton
+                            : style.sourceSwitchButton
                     }
-                }}>
-                {t("common.save")}
-            </Button>
+                />
+            ) : (
+                <Button
+                    style={carLandscape ? style.carHeaderSaveButton : null}
+                    fontColor={
+                        musicListChanged && musicSheet?.id
+                            ? "primary"
+                            : "textSecondary"
+                    }
+                    onPress={async () => {
+                        if (musicListChanged && musicSheet?.id) {
+                            if (musicSheet.id === localMusicSheetId) {
+                                await LocalMusicSheet.updateMusicList(
+                                    editingMusicList.map(_ => _.musicItem),
+                                );
+                            } else if (musicSheet.id === musicHistorySheetId) {
+                                await musicHistory.setHistory(
+                                    editingMusicList.map(_ => _.musicItem),
+                                );
+                            } else {
+                                await MusicSheet.manualSort(
+                                    musicSheet.id,
+                                    editingMusicList.map(_ => _.musicItem),
+                                );
+                            }
+
+                            Toast.success(t("toast.saveSuccess"));
+                            setMusicListChanged(false);
+                        }
+                    }}>
+                    {t("common.save")}
+                </Button>
+            )}
         </View>
     );
 
@@ -127,11 +139,11 @@ export default function Body() {
             <HorizontalSafeAreaView style={globalStyle.flex1}>
                 <ResponsiveSplitView
                     carPreset="secondaryActions"
-                    primary={<MusicList />}
+                    primary={<MusicList sortable={!sourceSwitchMode} />}
                     secondary={
                         <View style={style.actionRail}>
                             {header}
-                            <Bottom landscape />
+                            {sourceSwitchMode ? null : <Bottom landscape />}
                         </View>
                     }
                     primaryWeight={62}
@@ -144,7 +156,7 @@ export default function Body() {
     return (
         <HorizontalSafeAreaView style={globalStyle.flex1}>
             {header}
-            <MusicList />
+            <MusicList sortable={!sourceSwitchMode} />
         </HorizontalSafeAreaView>
     );
 }
@@ -178,6 +190,10 @@ const style = StyleSheet.create({
     },
     carHeaderSaveButton: {
         flex: 1,
+        minWidth: 0,
+        alignItems: "center",
+    },
+    sourceSwitchButton: {
         minWidth: 0,
         alignItems: "center",
     },

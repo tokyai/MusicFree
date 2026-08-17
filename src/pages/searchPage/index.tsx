@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import NavBar from "./components/navBar";
 import { useAtom, useSetAtom } from "jotai";
@@ -17,20 +17,41 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import StatusBar from "@/components/base/statusBar";
 import NoPlugin from "../../components/base/noPlugin";
 import { useI18N } from "@/core/i18n";
+import { useParams } from "@/core/router";
+import useSearch from "./hooks/useSearch";
 
 export default function () {
+    const params = useParams<"search-page">();
+    const initialQuery = params?.initialQuery?.trim();
     const [pageStatus, setPageStatus] = useAtom(pageStatusAtom);
     const setQuery = useSetAtom(queryAtom);
     const setSearchResultsState = useSetAtom(searchResultsAtom);
     const { t } = useI18N();
+    const search = useSearch();
+    const searchRef = useRef(search);
 
     useEffect(() => {
-        setSearchResultsState(initSearchResults);
+        searchRef.current = search;
+    }, [search]);
+
+    useEffect(() => {
         return () => {
             setPageStatus(PageStatus.EDITING);
             setQuery("");
         };
-    }, []);
+    }, [setPageStatus, setQuery]);
+
+    useEffect(() => {
+        setSearchResultsState(initSearchResults);
+        if (initialQuery) {
+            setQuery(initialQuery);
+            setPageStatus(PageStatus.SEARCHING);
+            searchRef.current(initialQuery, 1, "music");
+        } else {
+            setPageStatus(PageStatus.EDITING);
+            setQuery("");
+        }
+    }, [initialQuery, setPageStatus, setQuery, setSearchResultsState]);
 
     return (
         <SafeAreaView edges={["bottom", "top"]} style={style.wrapper}>

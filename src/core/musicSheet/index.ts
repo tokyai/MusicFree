@@ -11,7 +11,9 @@ import { atom, getDefaultStore, useAtomValue } from "jotai";
 import { nanoid } from "nanoid";
 import { useEffect, useMemo, useState } from "react";
 import migrate, { migrateV2 } from "./migrate.ts";
-import SortedMusicList from "./sortedMusicList.ts";
+import SortedMusicList, {
+    IMusicItemReplacement,
+} from "./sortedMusicList.ts";
 import storage from "./storage.ts";
 
 const produce = new Immer({
@@ -37,7 +39,7 @@ const musicListMap = new Map<string, SortedMusicList>();
 const ee = new EventEmitter<{
     UpdateMusicList: (updateInfo: {
         sheetId: string;
-        updateType: "length" | "resort"; // 更新类型
+        updateType: "length" | "resort" | "replace"; // 更新类型
     }) => void;
     UpdateSheetBasic: (data: {
         sheetId: string;
@@ -458,6 +460,43 @@ class MusicSheetClazz implements IInjectable {
             sheetId,
             updateType: "resort",
         });
+    }
+
+    /** 批量替换歌单内歌曲来源，保持原数组位置并一次性持久化。 */
+    async replaceMusicItems(
+        sheetId: string,
+        replacements: IMusicItemReplacement[],
+    ) {
+        const musicList = this.getSortedMusicListBySheetId(sheetId);
+        const preparedReplacements = replacements.map(item => ({
+            original: item.original,
+            replacement: {
+                ...item.replacement,
+                $timestamp: item.original.$timestamp,
+                $sortIndex: item.original.$sortIndex,
+            },
+        }));
+        const replacedCount = musicList.replace(preparedReplacements);
+        if (!replacedCount) {
+            return 0;
+        }
+
+        await storage.setMusicList(sheetId, musicList.musicList);
+        storage.setSheetMeta(sheetId, "sort", SortType.None);
+
+        const sheet = getDefaultStore()
+            .get(musicSheetsBaseAtom)
+            .find(item => item.id === sheetId);
+        if (!sheet?.coverImg?.startsWith?.("file://")) {
+            await this.updateMusicSheetBase(sheetId, {
+                coverImg: musicList.at(0)?.artwork,
+            });
+        }
+        ee.emit("UpdateMusicList", {
+            sheetId,
+            updateType: "replace",
+        });
+        return replacedCount;
     }
 
     getSheetMeta = storage.getSheetMeta;

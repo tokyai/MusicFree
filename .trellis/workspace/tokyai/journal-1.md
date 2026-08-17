@@ -205,3 +205,36 @@ Installed Trellis for MusicFree and documented source-backed frontend and native
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: 修复搜索换源并增加局域网备份
+
+**Date**: 2026-08-17
+**Task**: 修复搜索换源并增加局域网备份
+**Branch**: `master`
+
+### Summary
+
+修复播放详情作者和专辑跳转后自动搜索，放宽收藏批量换源为曲名和歌手主匹配，并新增 Android 一次性令牌保护的局域网备份还原；完成 TypeScript、79 个 Jest、ESLint、Kotlin、Release 构建和 1920x1080 Android 手工验证。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ae3af0f` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

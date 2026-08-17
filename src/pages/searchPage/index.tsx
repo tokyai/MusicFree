@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import NavBar from "./components/navBar";
 import { useAtom, useSetAtom } from "jotai";
 import {
@@ -19,6 +20,7 @@ import NoPlugin from "../../components/base/noPlugin";
 import { useI18N } from "@/core/i18n";
 import { useParams } from "@/core/router";
 import useSearch from "./hooks/useSearch";
+import { runInitialMusicSearch } from "./runInitialMusicSearch";
 
 export default function () {
     const params = useParams<"search-page">();
@@ -41,22 +43,39 @@ export default function () {
         };
     }, [setPageStatus, setQuery]);
 
+    useFocusEffect(
+        useCallback(() => {
+            if (!initialQuery) {
+                return;
+            }
+
+            runInitialMusicSearch(initialQuery, {
+                resetResults: () => setSearchResultsState(initSearchResults),
+                setQuery,
+                setSearching: () => setPageStatus(PageStatus.SEARCHING),
+                search: searchRef.current,
+            });
+        }, [
+            initialQuery,
+            setPageStatus,
+            setQuery,
+            setSearchResultsState,
+        ]),
+    );
+
     useEffect(() => {
-        setSearchResultsState(initSearchResults);
         if (initialQuery) {
-            setQuery(initialQuery);
-            setPageStatus(PageStatus.SEARCHING);
-            searchRef.current(initialQuery, 1, "music");
-        } else {
-            setPageStatus(PageStatus.EDITING);
-            setQuery("");
+            return;
         }
+        setSearchResultsState(initSearchResults);
+        setPageStatus(PageStatus.EDITING);
+        setQuery("");
     }, [initialQuery, setPageStatus, setQuery, setSearchResultsState]);
 
     return (
         <SafeAreaView edges={["bottom", "top"]} style={style.wrapper}>
             <StatusBar />
-            <NavBar />
+            <NavBar autoFocus={!initialQuery} />
             <SafeAreaView edges={["left", "right"]} style={style.wrapper}>
                 <View style={style.flex1}>
                     {pageStatus === PageStatus.EDITING && <HistoryPanel />}

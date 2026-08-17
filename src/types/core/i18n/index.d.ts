@@ -285,6 +285,22 @@ export interface ILanguageData {
     "backupAndResume.webdavUrl": string; // WebDAV URL
     "backupAndResume.backupToWebdav": string; // 备份到WebDAV
     "backupAndResume.resumeFromWebdav": string; // 从WebDAV恢复
+    "backupAndResume.lanBackup": string; // 局域网备份
+    "backupAndResume.backupToLan": string; // 通过局域网备份
+    "backupAndResume.resumeFromLan": string; // 通过局域网恢复
+    "backupAndResume.lanDescription": string; // 局域网备份说明
+    "backupAndResume.lanInstructions": string; // 局域网操作说明
+    "backupAndResume.lanTrustedNetworkWarning": string; // 可信局域网提示
+    "backupAndResume.lanExpiresAt": string; // 局域网服务失效时间
+    "backupAndResume.lanWaiting": string; // 等待局域网传输
+    "backupAndResume.copyLanAddress": string; // 复制局域网地址
+    "backupAndResume.lanError.unsupported": string; // 不支持局域网备份
+    "backupAndResume.lanError.networkUnavailable": string; // 局域网不可用
+    "backupAndResume.lanError.timeout": string; // 局域网传输超时
+    "backupAndResume.lanError.tooLarge": string; // 局域网备份过大
+    "backupAndResume.lanError.invalidBackup": string; // 局域网备份无效
+    "backupAndResume.lanError.transferFailed": string; // 局域网传输失败
+    "backupAndResume.lanError.cancelled": string; // 局域网传输取消
     "backupAndResume.ftpBackup": string; // FTP/FTPS备份
     "backupAndResume.ftpMode": string; // FTP模式
     "backupAndResume.ftpMode.ftp": string; // 普通FTP

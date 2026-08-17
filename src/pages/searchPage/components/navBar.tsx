@@ -22,7 +22,12 @@ import {
 } from "../store/atoms";
 import useDisplayMetrics from "@/hooks/useDisplayMetrics";
 
-export default function NavBar() {
+interface INavBarProps {
+    autoFocus?: boolean;
+}
+
+export default function NavBar(props: INavBarProps) {
+    const { autoFocus = true } = props;
     const search = useSearch();
     const [query, setQuery] = useAtom(queryAtom);
     const setPageStatus = useSetAtom(pageStatusAtom);
@@ -59,7 +64,7 @@ export default function NavBar() {
                     style={style.magnify}
                 />
                 <Input
-                    autoFocus
+                    autoFocus={autoFocus}
                     style={[
                         style.searchBar,
                         {

@@ -57,15 +57,21 @@ and stream resolution, the music-sheet store, and persisted music-list data.
 
 ### 3. Contracts
 
-- Search the target plugin with `title + artist`, then `title`, page 1 only;
-  candidates must pass title `>= 0.90`, artist `>= 0.85`, total `>= 0.90`,
-  edition-tag equality, and duration tolerance `max(4 seconds, 4%)`.
+- Search the target plugin with `title + artist`, then `title`, page 1 only.
+  Candidates must contain `id`, `platform`, `title`, and `artist`, then pass
+  normalized title `>= 0.85`, artist `>= 0.80`, and total `>= 0.82`.
+- Album, duration, and edition tags are ranking signals only. Differences in
+  those fields must not reject an otherwise matching title/artist pair. Equal
+  scores preserve plugin result order instead of failing as ambiguous.
 - `platform@id` is an identity/duplicate key only. IDs from different
   platforms never establish a match.
 - A candidate is accepted only when it has a valid direct URL or the target
   plugin resolves at least one configured quality URL.
 - The service uses at most two workers, checks `AbortSignal` before each new
   request, and returns `cancelled: true` without a persistence side effect.
+- Every valid item already in the sheet remains an occupied target identity,
+  including selected items that already use the target plugin. Each accepted
+  batch candidate reserves its target identity before another worker commits.
 - Normal completion preserves `$timestamp`/`$sortIndex` and the original list
   position; temporary stream-validation URLs are not copied into replacements.
 
@@ -76,7 +82,8 @@ and stream resolution, the music-sheet store, and persisted music-list data.
 | Missing/invalid legacy media fields | `failures: no-match`; original stays |
 | Same target identity already in the sheet or batch | `skipped: duplicate` |
 | Same target platform as the selected item | `skipped: already-target` |
-| Version mismatch, ambiguity, no result, or unplayable candidate | Failure; no replacement |
+| Title/artist below threshold, no result, or unplayable candidate | Failure; no replacement |
+| Same title/artist but different album, duration, or edition | Rank candidates; do not reject for that difference alone |
 | User cancellation / aborted signal | Discard all candidates; do not call `replaceMusicItems` |
 | Storage commit failure | Surface a translated warning and log through `devLog` |
 
@@ -84,16 +91,18 @@ and stream resolution, the music-sheet store, and persisted music-list data.
 
 - Good: the UI snapshots selected items, lets the service validate them, then
   commits only an un-cancelled result and refreshes the editor atom.
+- Good: a QQ and Kugou item with matching normalized title/artist can replace
+  each other even when one plugin reports a different album or duration.
 - Base: a failed or duplicate song remains in its original position and source.
-- Bad: comparing only IDs, taking the first search result, or writing a
-  resolved temporary URL back into the favorite item.
+- Bad: comparing only IDs, restoring strict duration/edition rejection, or
+  writing a resolved temporary URL back into the favorite item.
 
 ### 6. Tests Required
 
-- Pure matcher tests cover normalization, edition compatibility, duration
-  bounds, cross-platform IDs, and ambiguity margins.
+- Pure matcher tests cover normalization, title/artist thresholds,
+  cross-platform IDs, metadata differences, and deterministic equal scores.
 - Service tests cover malformed search payloads, unavailable-best-candidate
-  fallback with rechecked ambiguity, duplicate prevention, cancellation, and
+  fallback, both QQ/Kugou directions, duplicate prevention, cancellation, and
   invalid legacy records.
 - Persistence tests assert identity-index rebuild, order and metadata
   preservation, and rejection of existing/repeated target identities.
@@ -101,11 +110,11 @@ and stream resolution, the music-sheet store, and persisted music-list data.
 ### 7. Wrong vs Correct
 
 ```ts
-// Wrong: UI trusts the first result and mutates the sheet while requests run.
-const match = (await plugin.search(title, 1, "music")).data[0];
-await MusicSheet.addMusic("favorite", [match]);
+// Wrong: duration is a hard cross-platform identity requirement.
+if (Math.abs(source.duration - candidate.duration) > 4) return null;
 
-// Correct: service validates a strict candidate set; UI commits once.
+// Correct: the shared matcher gates on normalized title/artist and uses
+// duration, album, and edition only to rank valid candidates.
 const result = await batchSwitchMusicSources({
     musicItems,
     existingMusicItems,

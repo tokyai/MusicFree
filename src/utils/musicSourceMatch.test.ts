@@ -23,7 +23,7 @@ describe("music source matching", () => {
         expect(normalizeMusicSourceText(" Ｓｏｎｇ - A ")).toBe("songa");
     });
 
-    it("rejects a different recording edition", () => {
+    it("allows a different recording edition when title and artist match", () => {
         expect(getMusicSourceEditionTags(music({ title: "Song (Live)" }))).toEqual([
             "live",
         ]);
@@ -31,7 +31,7 @@ describe("music source matching", () => {
             music(),
             [music({ id: "live", title: "Song (Live)", duration: 205 })],
         );
-        expect(result.reason).toBe("no-match");
+        expect(result.reason).toBe("matched");
     });
 
     it("matches edition markers only when both recordings agree", () => {
@@ -71,20 +71,21 @@ describe("music source matching", () => {
         expect(result.reason).toBe("no-match");
     });
 
-    it("rejects duration differences outside the strict tolerance", () => {
+    it("allows duration differences when title and artist match", () => {
         const result = selectMusicSourceCandidate(
             music({ duration: 200 }),
             [music({ id: "longer", platform: "target", duration: 209 })],
         );
-        expect(result.reason).toBe("no-match");
+        expect(result.reason).toBe("matched");
     });
 
-    it("rejects ambiguous equal candidates", () => {
+    it("selects the first equally named candidate instead of failing as ambiguous", () => {
         const result = selectMusicSourceCandidate(music(), [
             music({ id: "one", album: "Album A" }),
             music({ id: "two", album: "Album B" }),
         ]);
-        expect(result.reason).toBe("ambiguous");
+        expect(result.reason).toBe("matched");
+        expect(result.match?.item.id).toBe("one");
     });
 
     it("selects a clearly stronger candidate", () => {

@@ -2,6 +2,7 @@ import CheckStorage from "@/components/dialogs/components/checkStorage.tsx";
 import DownloadDialog from "./downloadDialog";
 import EditSheetDetailDialog from "./editSheetDetail";
 import LoadingDialog from "./loadingDialog";
+import LanBackupDialog from "./lanBackupDialog";
 import MarkdownDialog from "./markdownDialog";
 import RadioDialog from "./radioDialog";
 import SimpleDialog from "./simpleDialog";
@@ -14,6 +15,7 @@ const dialogs = {
     DownloadDialog,
     SubscribePluginDialog,
     LoadingDialog,
+    LanBackupDialog,
     EditSheetDetailDialog,
     CheckStorage,
     MarkdownDialog,

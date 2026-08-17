@@ -1,7 +1,10 @@
 import minDistance from "./minDistance";
 
-export const MUSIC_SOURCE_MATCH_THRESHOLD = 0.9;
-export const MUSIC_SOURCE_MATCH_MIN_MARGIN = 0.05;
+/**
+ * 曲名和歌手是跨平台换源的主要身份线索；专辑/时长在不同插件中经常
+ * 缺失或采用不同单位，因此只参与排序，不再作为硬性拒绝条件。
+ */
+export const MUSIC_SOURCE_MATCH_THRESHOLD = 0.82;
 
 type MusicEditionTag =
     | "live"
@@ -221,14 +224,10 @@ export function scoreMusicSourceCandidate(
     if (!candidate?.id || !candidate.platform || !candidate.title || !candidate.artist) {
         return null;
     }
-    if (JSON.stringify(getEditionTags(target)) !== JSON.stringify(getEditionTags(candidate))) {
-        return null;
-    }
-
     const title = titleSimilarity(target, candidate);
     const artist = artistSimilarity(target, candidate);
     const duration = durationSimilarity(target, candidate);
-    if (title < 0.9 || artist < 0.85 || !duration.compatible) {
+    if (title < 0.85 || artist < 0.8) {
         return null;
     }
 
@@ -239,7 +238,7 @@ export function scoreMusicSourceCandidate(
         artist,
         duration: duration.score,
         album,
-        score: title * 0.55 + artist * 0.3 + duration.score * 0.1 + album * 0.05,
+        score: title * 0.6 + artist * 0.35 + duration.score * 0.03 + album * 0.02,
     };
 }
 
@@ -263,9 +262,6 @@ export function selectMusicSourceCandidate(
     const best = ranked[0];
     if (!best || best.score < MUSIC_SOURCE_MATCH_THRESHOLD) {
         return { reason: "no-match", ranked };
-    }
-    if (ranked[1] && best.score - ranked[1].score < MUSIC_SOURCE_MATCH_MIN_MARGIN) {
-        return { reason: "ambiguous", ranked };
     }
     return { reason: "matched", match: best, ranked };
 }

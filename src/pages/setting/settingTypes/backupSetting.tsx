@@ -19,6 +19,10 @@ import FtpBackupService, {
     type IFtpBackupError,
     normalizeFtpBackupOptions,
 } from "@/core/ftpBackup";
+import LanBackupService, {
+    type ILanBackupError,
+    type ILanBackupSession,
+} from "@/core/lanBackup";
 
 export default function BackupSetting() {
     const { t } = useI18N();
@@ -74,6 +78,83 @@ export default function BackupSetting() {
         }
         return reason instanceof Error ? reason.message : String(reason ?? "");
     };
+
+    const getLanErrorReason = (reason: unknown) => {
+        const errorCode = reason instanceof Error
+            ? (reason as ILanBackupError).code
+            : undefined;
+        const localizedCode: Record<string, string> = {
+            LAN_UNSUPPORTED: t("backupAndResume.lanError.unsupported"),
+            LAN_NETWORK_UNAVAILABLE: t(
+                "backupAndResume.lanError.networkUnavailable",
+            ),
+            LAN_TIMEOUT: t("backupAndResume.lanError.timeout"),
+            LAN_UPLOAD_TOO_LARGE: t("backupAndResume.lanError.tooLarge"),
+            LAN_INVALID_ENCODING: t(
+                "backupAndResume.lanError.invalidBackup",
+            ),
+            LAN_INVALID_BACKUP: t("backupAndResume.lanError.invalidBackup"),
+            LAN_TRANSFER_FAILED: t("backupAndResume.lanError.transferFailed"),
+            LAN_CANCELLED: t("backupAndResume.lanError.cancelled"),
+        };
+        if (errorCode && localizedCode[errorCode]) {
+            return localizedCode[errorCode];
+        }
+        return reason instanceof Error ? reason.message : String(reason ?? "");
+    };
+
+    function showLanSession(session: ILanBackupSession, isBackup: boolean) {
+        showDialog("LanBackupDialog", {
+            title: t(
+                isBackup
+                    ? "backupAndResume.backupToLan"
+                    : "backupAndResume.resumeFromLan",
+            ),
+            url: session.url,
+            expiresAt: session.expiresAt,
+            promise: session.transfer,
+            onResolve() {
+                Toast.success(
+                    t(isBackup ? "toast.backupSuccess" : "toast.resumeSuccess"),
+                );
+            },
+            onReject(reason) {
+                Toast.warn(
+                    t(isBackup ? "toast.backupFail" : "toast.resumeFail", {
+                        reason: getLanErrorReason(reason),
+                    }),
+                );
+            },
+            onCancel() {
+                LanBackupService.cancel();
+            },
+        });
+    }
+
+    async function onBackupToLan() {
+        try {
+            showLanSession(await LanBackupService.startBackup(), true);
+        } catch (reason) {
+            Toast.warn(
+                t("toast.backupFail", { reason: getLanErrorReason(reason) }),
+            );
+        }
+    }
+
+    async function onResumeFromLan() {
+        try {
+            showLanSession(
+                await LanBackupService.startResume(
+                    resumeMode ?? ResumeMode.Append,
+                ),
+                false,
+            );
+        } catch (reason) {
+            Toast.warn(
+                t("toast.resumeFail", { reason: getLanErrorReason(reason) }),
+            );
+        }
+    }
 
     function onTestFtp() {
         showDialog("LoadingDialog", {
@@ -368,6 +449,26 @@ export default function BackupSetting() {
         </>
     );
 
+    const lanContent = LanBackupService.isSupported ? (
+        <>
+            <ListItemHeader>
+                {t("backupAndResume.lanBackup")}
+            </ListItemHeader>
+            <ListItem withHorizontalPadding onPress={onBackupToLan}>
+                <ListItem.Content
+                    title={t("backupAndResume.backupToLan")}
+                    description={t("backupAndResume.lanDescription")}
+                />
+            </ListItem>
+            <ListItem withHorizontalPadding onPress={onResumeFromLan}>
+                <ListItem.Content
+                    title={t("backupAndResume.resumeFromLan")}
+                    description={t("backupAndResume.lanDescription")}
+                />
+            </ListItem>
+        </>
+    ) : null;
+
     const resumeContent = (
         <>
             <ListItemHeader>{t("sidebar.backupAndResume")}</ListItemHeader>
@@ -406,6 +507,7 @@ export default function BackupSetting() {
                     }
                 </ListItem.ListItemText>
             </ListItem>
+            {lanContent}
             {ftpContent}
             <ListItem withHorizontalPadding onPress={onResumeFromUrl}>
                 <ListItem.Content title={t("backupAndResume.resumeFromUrlDialogTitle")} />

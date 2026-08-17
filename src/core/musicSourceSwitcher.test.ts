@@ -94,7 +94,41 @@ describe("music source switcher", () => {
         expect(getMediaSource).toHaveBeenCalled();
     });
 
-    it("rechecks ambiguity after an unavailable candidate is removed", async () => {
+    it.each([
+        ["轻QQ", "轻酷狗"],
+        ["轻酷狗", "轻QQ"],
+    ])(
+        "switches in both directions when only title and artist agree (%s -> %s)",
+        async (sourcePlatform, targetPlatform) => {
+            const original = music({
+                id: `${sourcePlatform}-id`,
+                platform: sourcePlatform,
+                album: "Original album",
+                duration: 180,
+            });
+            const candidate = music({
+                id: `${targetPlatform}-id`,
+                platform: targetPlatform,
+                album: "Different album",
+                duration: 247,
+                url: "https://example.com/song.mp3",
+            });
+            const search = jest.fn(async () => ({ data: [candidate] }));
+
+            const result = await batchSwitchMusicSources({
+                musicItems: [original],
+                existingMusicItems: [original],
+                targetPlugin: plugin(search),
+            });
+
+            expect(result.failures).toHaveLength(0);
+            expect(result.replacements).toEqual([
+                { original, replacement: candidate },
+            ]);
+        },
+    );
+
+    it("selects the next playable candidate after the best one is unavailable", async () => {
         const search = jest.fn(async () => ({
             data: [
                 music({ id: "unavailable", platform: "target" }),
@@ -118,8 +152,8 @@ describe("music source switcher", () => {
             targetPlugin: plugin(search),
         });
 
-        expect(result.replacements).toHaveLength(0);
-        expect(result.failures[0]?.reason).toBe("ambiguous");
+        expect(result.failures).toHaveLength(0);
+        expect(result.replacements[0]?.replacement.id).toBe("candidate-one");
     });
 
     it("treats malformed search data as an empty result", async () => {
@@ -136,6 +170,28 @@ describe("music source switcher", () => {
         expect(result.failures).toEqual([
             { musicItem: music(), reason: "no-match" },
         ]);
+    });
+
+    it("does not replace a song with an identity already in the sheet", async () => {
+        const original = music({ id: "source", platform: "source" });
+        const existingTarget = music({
+            id: "target-id",
+            platform: "target",
+            url: "https://example.com/song.mp3",
+        });
+        const search = jest.fn(async () => ({ data: [existingTarget] }));
+
+        const result = await batchSwitchMusicSources({
+            musicItems: [original, existingTarget],
+            existingMusicItems: [original, existingTarget],
+            targetPlugin: plugin(search),
+        });
+
+        expect(result.replacements).toHaveLength(0);
+        expect(result.skipped).toEqual(expect.arrayContaining([
+            { musicItem: original, reason: "duplicate" },
+            { musicItem: existingTarget, reason: "already-target" },
+        ]));
     });
 
     it("keeps an invalid legacy favorite as a failed item", async () => {

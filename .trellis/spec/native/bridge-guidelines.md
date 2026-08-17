@@ -120,3 +120,86 @@ val client = FTPSClient(false).apply {
 client.execPBSZ(0L)
 client.execPROT("P")
 ```
+
+## Scenario: One-Shot LAN Backup Transport
+
+### 1. Scope / Trigger
+
+Use this contract when changing the Android LAN backup bridge, its typed
+wrapper, or `src/core/lanBackup.ts`. It moves an existing backup between the
+car unit and a phone browser without invoking Android's file picker.
+
+### 2. Signatures
+
+- `LanBackup.startServer({ mode, backupJson?, maxBytes?, timeoutMs? })`
+  returns `Promise<{ url, expiresAt, mode }>`.
+- `LanBackup.waitForTransfer()` returns
+  `Promise<{ bytes, payload? }>`; `payload` exists only for restore uploads.
+- `LanBackup.stopServer(): void` is idempotent cleanup.
+- Core entry points are `startLanBackup()`, `startLanResume(resumeMode)`, and
+  `cancelLanBackup()`.
+- Native module name: `LanBackup`.
+
+### 3. Contracts
+
+- Bind a random port on a non-loopback LAN IPv4 address and require a random
+  128-bit token on every request. Only one session and one transfer waiter may
+  be active; a new session cancels the previous one.
+- `GET /?token=...` serves the phone page. Backup mode permits one
+  `GET /download?token=...`; restore mode permits one
+  `POST /upload?token=...` with `Content-Length`.
+- Defaults are a 16 MiB payload limit and a 10-minute lifetime. Configurable
+  bounds are 1 KiB to 64 MiB and 30 seconds to 30 minutes.
+- Native code validates HTTP framing, token, size, and strict UTF-8 only. It
+  must not parse the MusicFree schema. TypeScript calls `parseBackupPayload`
+  before `Backup.resume`, so an invalid upload never mutates storage.
+- A successful transfer, timeout, explicit stop, superseding start, or module
+  invalidation closes both the listening socket and any accepted client socket
+  and settles the pending promise once.
+- The service is Android-only and guarded by the typed wrapper's
+  `isSupported`; FTP/FTPS, WebDAV, and URL restore behavior stays independent.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| No usable LAN IPv4 address | Reject `LAN_NETWORK_UNAVAILABLE` |
+| Wrong token, method, path, or HTTP framing | Return 4xx to that client; keep the session available |
+| Missing length or payload above limit | Return 411/413; do not expose an upload payload |
+| Malformed UTF-8 | Return 400; do not expose an upload payload |
+| Session expires | Reject `LAN_TIMEOUT` and close sockets |
+| Explicit stop or superseding start | Reject the waiter with `LAN_CANCELLED` and close sockets |
+| Second waiter | Reject `LAN_BUSY` without replacing the first waiter |
+| Uploaded JSON fails `parseBackupPayload` | Reject `LAN_INVALID_BACKUP`; do not call `Backup.resume` |
+
+### 5. Good / Base / Bad Cases
+
+- Good: the phone downloads or uploads once, the dialog completes, and the
+  port disappears immediately.
+- Base: a bad token or malformed request receives an error while the same
+  short-lived session remains available for a correct retry.
+- Bad: binding all interfaces, logging the token or payload, parsing sheet
+  fields in Kotlin, or closing only the server socket while a client read is
+  still blocked.
+
+### 6. Tests Required
+
+- TypeScript tests assert backup serialization, upload parsing before restore,
+  invalid-shape rejection, unsupported-platform behavior, and cancellation.
+- Run TypeScript checks and `:app:compileDebugKotlin` after contract changes.
+- With Android available, exercise page access, wrong-token retry, successful
+  download/upload, invalid backup rejection, explicit cancellation, and verify
+  the ephemeral port closes after every terminal path.
+- Packaging checks verify the universal APK manifest, application id, and
+  signature.
+
+### 7. Wrong vs Correct
+
+```kotlin
+// Wrong: stop accepting new clients but leave a partial upload blocked.
+activeSocket?.close()
+
+// Correct: cancellation owns and closes both socket boundaries.
+activeClient?.close()
+activeSocket?.close()
+```

@@ -116,6 +116,9 @@ After implementation:
 - [ ] Tested with edge cases (null, empty, invalid)
 - [ ] Verified error handling at each boundary
 - [ ] Checked data survives round-trip
+- [ ] For UI rendered outside a navigator (global panels, dialogs, portals),
+      verified that its root navigation object supports the chosen action;
+      navigator-specific actions use `dispatch` and have an integration test
 - [ ] Checked that consumers import shared decoders / projections instead of
       casting payload fields locally
 - [ ] Checked that derived state points back to the source event identifier

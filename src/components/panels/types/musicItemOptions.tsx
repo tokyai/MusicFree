@@ -32,6 +32,7 @@ import lyricManager from "@/core/lyricManager";
 import { useI18N } from "@/core/i18n";
 import pluginManager from "@/core/pluginManager";
 import useDisplayMetrics from "@/hooks/useDisplayMetrics";
+import { nanoid } from "nanoid";
 
 interface IMusicItemOptionsProps {
     /** 歌曲信息 */
@@ -97,7 +98,8 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                 hidePanel();
                 navigate(ROUTE_PATH.SEARCH_PAGE, {
                     initialQuery: artist,
-                });
+                    searchRequestId: nanoid(),
+                }, { push: true });
             },
         },
         {
@@ -111,7 +113,8 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                 hidePanel();
                 navigate(ROUTE_PATH.SEARCH_PAGE, {
                     initialQuery: album,
-                });
+                    searchRequestId: nanoid(),
+                }, { push: true });
             },
         },
         {

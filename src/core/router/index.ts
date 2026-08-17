@@ -1,6 +1,9 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useCallback } from "react";
 import { LogBox } from "react-native";
+import navigateWithOptions, {
+    INavigateOptions,
+} from "./navigationActions";
 
 LogBox.ignoreLogs([
     "Non-serializable values were found in the navigation state",
@@ -59,6 +62,8 @@ interface RouterParams extends RouterParamsBase {
     "search-page":
         | {
             initialQuery: string;
+            /** 用于让相同关键词的连续跳转也重新触发搜索。 */
+            searchRequestId?: string;
         }
         | undefined;
     "local-sheet-detail": {
@@ -124,8 +129,9 @@ export function useNavigate() {
     const navigate = useCallback(function <T extends RoutePaths>(
         route: T,
         params?: RouterParams[T],
+        options?: INavigateOptions,
     ) {
-        navigation.navigate(route, params);
+        navigateWithOptions(navigation, route, params, options);
     },
     [navigation]);
 

@@ -172,3 +172,36 @@ Installed Trellis for MusicFree and documented source-backed frontend and native
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: 搜索结果与收藏批量换源
+
+**Date**: 2026-08-17
+**Task**: 搜索结果与收藏批量换源
+**Branch**: `master`
+
+### Summary
+
+完成搜索歌曲封面预览、播放详情歌手/专辑跳转搜索、收藏歌曲批量换源。新增严格跨平台匹配、版本与时长门禁、可播放性验证、取消保护、重复防护和一次性歌单持久化；同步三语文案与核心服务规范。TypeScript、65 个 Jest 测试和 ESLint 通过；Android 编译因环境缺少 Android SDK 未完成。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `43af988` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

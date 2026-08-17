@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
+- **Total Sessions**: 6
 - **Last Active**: 2026-08-17
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~174 | Active |
+| `journal-1.md` | ~207 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 6 | 2026-08-17 | 搜索结果与收藏批量换源 | `43af988` | `master` |
 | 5 | 2026-08-17 | 车机侧栏文字溢出修复 | `4336073` | `master` |
 | 4 | 2026-08-16 | 车机共存包、FTP备份与横屏大屏适配 | `e2374b3`, `88cd1a2` | `master` |
 | 3 | 2026-08-16 | 车机大屏适配与 APK 构建 | `57f2e12` | `master` |

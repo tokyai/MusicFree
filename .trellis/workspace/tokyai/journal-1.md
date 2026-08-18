@@ -238,3 +238,36 @@ Installed Trellis for MusicFree and documented source-backed frontend and native
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: 歌词搜索与MV双引擎播放
+
+**Date**: 2026-08-18
+**Task**: 歌词搜索与MV双引擎播放
+**Branch**: `master`
+
+### Summary
+
+完成跨音源歌词候选搜索与关联、ExoPlayer/MPV应用内MV播放、九个音源MV契约适配、API 26与Release打包；按用户要求跳过后续模拟器播放验收。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9cdf029` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

@@ -9,6 +9,22 @@ declare namespace IPlugin {
         quality?: IMusic.IQualityKey;
     }
 
+    export interface IMusicVideoSource {
+        quality: string;
+        height: number;
+        url: string;
+        headers?: Record<string, string>;
+        mimeType?: string;
+    }
+
+    export interface IMusicVideoResult {
+        id: string;
+        title?: string;
+        artist?: string;
+        artwork?: string;
+        sources: IMusicVideoSource[];
+    }
+
     export interface ISearchResult<T extends ICommon.SupportMediaType> {
         isEnd?: boolean;
         data: ICommon.SupportMediaItemBase[T][];
@@ -93,6 +109,10 @@ declare namespace IPlugin {
             musicItem: IMusic.IMusicItemBase,
             quality: IMusic.IQualityKey,
         ) => Promise<IMediaSourceResult | null>;
+        /** 获取当前平台的 MV 播放源 */
+        getMusicVideo?: (
+            musicItem: IMusic.IMusicItemBase,
+        ) => Promise<IMusicVideoResult | null>;
         /** 根据主键去查询歌曲信息 */
         getMusicInfo?: (
             musicBase: ICommon.IMediaBase,

@@ -1,58 +1,108 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import rpx, { vmax, vw } from "@/utils/rpx";
-
-import { fontSizeConst, fontWeightConst } from "@/constants/uiConst";
 import Button from "@/components/base/textButton.tsx";
-import useColors from "@/hooks/useColors";
-import PanelBase from "../../base/panelBase";
-import { TextInput } from "react-native-gesture-handler";
-import useSearchLrc from "./useSearchLrc";
-import PluginManager from "@/core/pluginManager";
-import { SceneMap, TabBar, TabView } from "react-native-tab-view";
-import LyricList from "./LyricList";
-import globalStyle from "@/constants/globalStyle";
 import NoPlugin from "@/components/base/noPlugin";
+import PanelBase from "@/components/panels/base/panelBase";
+import { hidePanel } from "@/components/panels/usePanel";
+import { fontSizeConst } from "@/constants/uiConst";
 import { useI18N } from "@/core/i18n";
+import lyricManager from "@/core/lyricManager";
+import type { ILyricSearchCandidate } from "@/core/lyricSearch";
+import PluginManager from "@/core/pluginManager";
+import TrackPlayer from "@/core/trackPlayer";
+import useColors from "@/hooks/useColors";
+import rpx, { vmax } from "@/utils/rpx";
+import Toast from "@/utils/toast";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { TextInput } from "react-native-gesture-handler";
+import LyricList from "./LyricList";
+import useSearchLrc from "./useSearchLrc";
 
-interface INewMusicSheetProps {
+interface ISearchLrcProps {
     musicItem?: IMusic.IMusicItem | null;
 }
 
-export default function SearchLrc(props: INewMusicSheetProps) {
-    const { musicItem } = props;
-    const [input, setInput] = useState(
-        musicItem?.alias ?? musicItem?.title ?? "",
+function hasActualLyric(source: ILyric.ILyricSource | null): boolean {
+    return !!(
+        source?.rawLrc?.trim() ||
+        source?.translation?.trim()
     );
+}
+
+export default function SearchLrc(props: ISearchLrcProps) {
+    const { musicItem } = props;
+    const initialQuery = musicItem?.alias?.trim()
+        ? musicItem.alias
+        : musicItem?.title ?? "";
+    const [input, setInput] = useState(initialQuery);
+    const [applyingKey, setApplyingKey] = useState<string | null>(null);
+    const applyingKeyRef = React.useRef<string | null>(null);
     const colors = useColors();
     const { t } = useI18N();
-
-    const searchLrc = useSearchLrc();
+    const plugins = useMemo(
+        () => PluginManager.getSortedSearchablePlugins("lyric"),
+        [],
+    );
+    const { data, search, state } = useSearchLrc(musicItem, plugins);
 
     useEffect(() => {
-        if (musicItem) {
-            searchLrc(musicItem.alias || musicItem.title, 1);
+        if (initialQuery) {
+            search(initialQuery);
         }
-    }, []);
+    }, [initialQuery, search]);
+
+    const applyCandidate = useCallback(
+        async (candidate: ILyricSearchCandidate) => {
+            if (!musicItem || applyingKeyRef.current) {
+                return;
+            }
+            const key = `${candidate.pluginHash}@${candidate.musicItem.platform}@${candidate.musicItem.id}`;
+            applyingKeyRef.current = key;
+            setApplyingKey(key);
+            const targetWasCurrent = TrackPlayer.isCurrentMusic(musicItem);
+            try {
+                const plugin =
+                    PluginManager.getByHash(candidate.pluginHash) ??
+                    PluginManager.getByMedia(candidate.musicItem);
+                const lyricSource =
+                    (await plugin?.methods.getLyric(candidate.musicItem)) ??
+                    null;
+                if (!hasActualLyric(lyricSource)) {
+                    throw new Error("EMPTY_LYRIC");
+                }
+                if (
+                    targetWasCurrent &&
+                    !TrackPlayer.isCurrentMusic(musicItem)
+                ) {
+                    throw new Error("STALE_MUSIC");
+                }
+
+                lyricManager.associateLyric(musicItem, candidate.musicItem);
+                Toast.success(t("panel.searchLrc.toast.settingSuccess"));
+                hidePanel();
+            } catch {
+                Toast.warn(t("panel.searchLrc.toast.failToSearch"));
+            } finally {
+                applyingKeyRef.current = null;
+                setApplyingKey(null);
+            }
+        },
+        [musicItem, t],
+    );
 
     return (
         <PanelBase
             keyboardAvoidBehavior="none"
             height={vmax(80)}
-            positionMethod='top'
+            positionMethod="top"
             renderBody={() => (
-                <View style={style.wrapper}>
-                    <View style={style.titleContainer}>
+                <View style={styles.wrapper}>
+                    <View style={styles.titleContainer}>
                         <TextInput
                             value={input}
-                            onChangeText={_ => {
-                                setInput(_);
-                            }}
-                            onSubmitEditing={() => {
-                                searchLrc(input, 1);
-                            }}
+                            onChangeText={setInput}
+                            onSubmitEditing={() => search(input)}
                             style={[
-                                style.input,
+                                styles.input,
                                 {
                                     color: colors.text,
                                     backgroundColor: colors.placeholder,
@@ -63,25 +113,39 @@ export default function SearchLrc(props: INewMusicSheetProps) {
                             maxLength={80}
                         />
                         <Button
-                            style={style.searchBtn}
-                            onPress={() => {
-                                searchLrc(input, 1);
-                            }}>
+                            style={styles.searchBtn}
+                            onPress={() => search(input)}>
                             {t("common.search")}
                         </Button>
                     </View>
-                    <LyricResultBodyWrapper />
+                    <View style={styles.resultContainer}>
+                        {plugins.length ? (
+                            <LyricList
+                                data={data}
+                                state={state}
+                                applyingKey={applyingKey}
+                                onPress={applyCandidate}
+                            />
+                        ) : (
+                            <NoPlugin
+                                notSupportType={t(
+                                    "panel.searchLrc.notSupported",
+                                )}
+                            />
+                        )}
+                    </View>
                 </View>
             )}
         />
     );
 }
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
     wrapper: {
         width: "100%",
         paddingTop: rpx(36),
         flex: 1,
+        minHeight: 0,
     },
     titleContainer: {
         flexDirection: "row",
@@ -89,97 +153,19 @@ const style = StyleSheet.create({
         marginBottom: rpx(6),
         paddingHorizontal: rpx(24),
     },
-
-    opeartions: {
-        width: "100%",
-        paddingHorizontal: rpx(24),
-        flexDirection: "row",
-        height: rpx(100),
-        alignItems: "center",
-        justifyContent: "space-between",
-    },
     input: {
         borderRadius: rpx(12),
         fontSize: fontSizeConst.content,
         lineHeight: fontSizeConst.content * 1.5,
         padding: rpx(12),
         flex: 1,
+        minWidth: 0,
     },
     searchBtn: {
         marginLeft: rpx(12),
     },
+    resultContainer: {
+        flex: 1,
+        minHeight: 0,
+    },
 });
-
-function LyricResultBodyWrapper() {
-    const [index, setIndex] = useState(0);
-    const { t } = useI18N();
-
-    const routes = useMemo(() => PluginManager.getSortedSearchablePlugins("lyric")?.map?.(
-        _ => ({
-            key: _.hash,
-            title: _.name,
-        }),
-    ) ?? [], []);
-
-    const sceneMap = useMemo(() => {
-        const scene: Record<string, any> = {};
-        routes.forEach(r => {
-            scene[r.key] = LyricList;
-        });
-        return SceneMap(scene);
-
-    }, [routes]);
-
-
-    const colors = useColors();
-    return routes?.length ? (
-        <TabView
-            style={globalStyle.fwflex1}
-            lazy
-            navigationState={{
-                index,
-                routes,
-            }}
-            renderTabBar={_ => (
-                <TabBar
-                    {..._}
-                    scrollEnabled
-                    style={{
-                        backgroundColor: "transparent",
-                        shadowColor: "transparent",
-                        borderColor: "transparent",
-                    }}
-                    tabStyle={{
-                        width: "auto",
-                    }}
-                    pressColor="transparent"
-                    inactiveColor={colors.text}
-                    activeColor={colors.primary}
-                    renderLabel={({ route, focused, color }) => (
-                        <Text
-                            numberOfLines={1}
-                            style={{
-                                width: rpx(160),
-                                fontWeight: focused
-                                    ? fontWeightConst.bolder
-                                    : fontWeightConst.medium,
-                                color,
-                                textAlign: "center",
-                            }}>
-                            {route.title ?? t("panel.searchLrc.unnamed")}
-                        </Text>
-                    )}
-                    indicatorStyle={{
-                        backgroundColor: colors.primary,
-                        height: rpx(4),
-                    }}
-                />
-            )}
-            renderScene={sceneMap}
-            onIndexChange={setIndex}
-            initialLayout={{ width: vw(100) }}
-        />
-    ) : (
-        <NoPlugin notSupportType={t("panel.searchLrc.notSupported")} />
-    );
-}

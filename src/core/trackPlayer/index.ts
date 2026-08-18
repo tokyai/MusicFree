@@ -628,6 +628,12 @@ class TrackPlayer extends EventEmitter<{
         await ReactNativeTrackPlayer.pause();
     }
 
+    async isPlaying(): Promise<boolean> {
+        return (
+            await ReactNativeTrackPlayer.getPlaybackState()
+        ).state === State.Playing;
+    }
+
     toggleRepeatMode(): void {
         this.setRepeatMode(TrackPlayer.toggleRepeatMapping[this.repeatMode]);
     }

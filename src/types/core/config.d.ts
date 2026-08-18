@@ -49,6 +49,10 @@ export interface IAppConfigProperties {
     "lyric.bilibiliAudioRecognitionProvider": "netease" | "audd";
     "lyric.auddApiToken": string;
 
+    // Music video
+    "mv.defaultPlayer": "exo" | "mpv";
+    "mv.preferredHeight": number;
+
     // Theme
     "theme.background": string;
     "theme.backgroundOpacity": number;

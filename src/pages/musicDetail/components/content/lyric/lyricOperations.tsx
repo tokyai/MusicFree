@@ -106,18 +106,9 @@ export default function LyricOperations(props: ILyricOperationsProps) {
                     if (!currentMusic) {
                         return;
                     }
-                    // if (
-                    //     Config.get('setting.basic.associateLyricType') ===
-                    //     'input'
-                    // ) {
-                    //     showPanel('AssociateLrc', {
-                    //         musicItem: currentMusic,
-                    //     });
-                    // } else {
                     showPanel("SearchLrc", {
                         musicItem: currentMusic,
                     });
-                    // }
                 }}>
                 <Icon
                     name="magnifying-glass"

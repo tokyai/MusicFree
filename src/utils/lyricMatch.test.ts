@@ -1,8 +1,10 @@
 import { describe, expect, it } from "@jest/globals";
 import {
     getRecognizedSongIdentity,
+    getLyricTextSimilarity,
     normalizeLyricMatchText,
     scoreLyricCandidate,
+    scoreLyricSearchCandidate,
 } from "./lyricMatch";
 
 describe("lyric matching", () => {
@@ -29,5 +31,17 @@ describe("lyric matching", () => {
         expect(
             getRecognizedSongIdentity({ title: "Song A", artist: "Artist" }),
         ).toBe("songa@artist");
+    });
+
+    it("scores search candidates as similarity from zero to one", () => {
+        expect(getLyricTextSimilarity("Song A", "song-a")).toBe(1);
+        expect(getLyricTextSimilarity("", "")).toBe(0);
+        expect(
+            scoreLyricSearchCandidate(
+                "Song A",
+                { title: "Song A", artist: "Artist", album: "Album" },
+                { title: "Song A", artist: "Artist", album: "Album" },
+            ),
+        ).toBe(1);
     });
 });

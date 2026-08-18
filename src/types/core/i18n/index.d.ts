@@ -359,6 +359,22 @@ export interface ILanguageData {
     "basicSettings.carDisplayFontSize": string; // 车机字号档位
     "basicSettings.carDisplayFontSize.medium": string; // 适中
     "basicSettings.carDisplayFontSize.large": string; // 大字
+    "basicSettings.defaultMusicVideoPlayer": string; // 默认 MV 播放器
+    "basicSettings.defaultMusicVideoPlayer.exo": string; // ExoPlayer
+    "basicSettings.defaultMusicVideoPlayer.mpv": string; // MPV
+    "musicVideo.title": string; // 播放 MV
+    "musicVideo.back": string; // 返回
+    "musicVideo.pause": string; // 暂停
+    "musicVideo.quality": string; // MV 清晰度
+    "musicVideo.player": string; // MV 播放器
+    "musicVideo.retry": string; // 重试
+    "musicVideo.tryOtherPlayer": string; // 换播放器重试
+    "musicVideo.unsupported": string; // 当前音源不支持 MV
+    "musicVideo.unavailable": string; // 当前歌曲没有 MV
+    "musicVideo.stale": string; // 歌曲已切换
+    "musicVideo.prepareFailed": string; // MV 获取失败
+    "musicVideo.playbackFailed": string; // MV 播放失败
+    "musicVideo.sessionUnavailable": string; // MV 会话失效
     "basicSettings.sheetAndAlbum": string; // 歌单和专辑
     "basicSettings.clickMusicInSearch": string; // 点击搜索中的音乐
     "basicSettings.clickMusicInSearch.playMusic": string; // 播放歌曲

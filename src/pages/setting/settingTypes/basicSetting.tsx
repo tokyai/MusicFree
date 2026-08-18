@@ -34,6 +34,7 @@ import { FlatList, ScrollView } from "react-native-gesture-handler";
 import useOrientation from "@/hooks/useOrientation";
 import LandscapeNavigationRail from "@/components/base/landscapeNavigationRail";
 import ResponsiveSplitView from "@/components/base/responsiveSplitView";
+import { isMpvVideoSupported } from "@/native/mpvVideo";
 
 function createSwitch(
     title: string,
@@ -137,12 +138,12 @@ export default function BasicSetting() {
     const autoUpdatePlugin = useAppConfig("basic.autoUpdatePlugin");
     const notCheckPluginVersion = useAppConfig("basic.notCheckPluginVersion");
     const lazyLoadPlugin = useAppConfig("basic.lazyLoadPlugin");
-    const associateLyricType = useAppConfig("basic.associateLyricType");
     const showExitOnNotification = useAppConfig("basic.showExitOnNotification");
     const musicOrderInLocalSheet = useAppConfig("basic.musicOrderInLocalSheet");
     const tryChangeSourceWhenPlayFail = useAppConfig("basic.tryChangeSourceWhenPlayFail");
     const carDisplayMode = useAppConfig("basic.carDisplayMode");
     const carDisplayFontSize = useAppConfig("basic.carDisplayFontSize");
+    const defaultMusicVideoPlayer = useAppConfig("mv.defaultPlayer");
 
     const { t } = useI18N();
 
@@ -230,16 +231,6 @@ export default function BasicSetting() {
                     t("basicSettings.musicDetailAwake"),
                     "basic.musicDetailAwake",
                     musicDetailAwake ?? false,
-                ),
-                createRadio(
-                    t("basicSettings.associateLyricType"),
-                    "basic.associateLyricType",
-                    ["input", "search"],
-                    associateLyricType ?? "search",
-                    {
-                        input: t("basicSettings.associateLyricType.input"),
-                        search: t("basicSettings.associateLyricType.search"),
-                    },
                 ),
                 createSwitch(
                     t("basicSettings.showExitOnNotification"),
@@ -359,6 +350,18 @@ export default function BasicSetting() {
                     t("basicSettings.autoStopWhenError"),
                     "basic.autoStopWhenError",
                     autoStopWhenError ?? false,
+                ),
+                createRadio(
+                    t("basicSettings.defaultMusicVideoPlayer"),
+                    "mv.defaultPlayer",
+                    isMpvVideoSupported() ? ["exo", "mpv"] : ["exo"],
+                    defaultMusicVideoPlayer === "mpv" && isMpvVideoSupported()
+                        ? "mpv"
+                        : "exo",
+                    {
+                        exo: t("basicSettings.defaultMusicVideoPlayer.exo"),
+                        mpv: t("basicSettings.defaultMusicVideoPlayer.mpv"),
+                    },
                 ),
                 createRadio(
                     t("basicSettings.tempRemoteDuck"),

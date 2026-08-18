@@ -1,5 +1,4 @@
 import AddToMusicSheet from "./addToMusicSheet";
-import AssociateLrc from "./associateLrc";
 import ColorPicker from "./colorPicker";
 import ImportMusicSheet from "./importMusicSheet";
 import MusicItemOptions from "./musicItemOptions";
@@ -31,8 +30,6 @@ export default {
     ImportMusicSheet,
     /** 当前播放列表 */
     PlayList: PlayList,
-    /** 关联歌词 */
-    AssociateLrc,
     /** 简单的输入 */
     SimpleInput,
     /** 定时关闭 */

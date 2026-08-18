@@ -21,7 +21,6 @@ import { showDialog } from "@/components/dialogs/useDialog";
 import { hidePanel, showPanel } from "../usePanel";
 import Divider from "@/components/base/divider";
 import { iconSizeConst } from "@/constants/uiConst";
-import Config from "@/core/appConfig";
 import TrackPlayer from "@/core/trackPlayer";
 import mediaCache from "@/core/mediaCache";
 import { IIconName } from "@/components/base/icon.tsx";
@@ -206,17 +205,9 @@ export default function MusicItemOptions(props: IMusicItemOptionsProps) {
                 ? t("panel.musicItemOptions.associatedLyric", { platform: associatedLrc.platform, id: associatedLrc.id })
                 : t("panel.musicItemOptions.associateLyric"),
             onPress: async () => {
-                if (
-                    Config.getConfig("basic.associateLyricType") === "input"
-                ) {
-                    showPanel("AssociateLrc", {
-                        musicItem,
-                    });
-                } else {
-                    showPanel("SearchLrc", {
-                        musicItem,
-                    });
-                }
+                showPanel("SearchLrc", {
+                    musicItem,
+                });
             },
         },
         {

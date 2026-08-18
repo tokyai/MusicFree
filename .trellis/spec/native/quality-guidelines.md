@@ -2,8 +2,9 @@
 
 ## Compatibility
 
-- The current Android minimum is API 24 (`android/build.gradle`). Do not claim
-  Android 6/API 23 compatibility without a separate dependency and build audit.
+- The current Android minimum is API 26 (`android/build.gradle`) because the
+  bundled libmpv AAR requires Android 8. Do not claim Android 7/API 25 or lower
+  compatibility without replacing the dependency and completing a build audit.
 - Preserve `MainActivity` configuration-change handling for orientation and
   screen-size changes.
 - Shared TypeScript UI may target Android and iOS, but platform-specific native

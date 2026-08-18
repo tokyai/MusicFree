@@ -1,5 +1,6 @@
 import Home from "@/pages/home";
 import MusicDetail from "@/pages/musicDetail";
+import MusicVideo from "@/pages/musicVideo";
 import TopList from "@/pages/topList";
 import TopListDetail from "@/pages/topListDetail";
 import SearchPage from "@/pages/searchPage";
@@ -36,6 +37,10 @@ export const routes: Array<IRoutes> = [
     {
         path: ROUTE_PATH.MUSIC_DETAIL,
         component: MusicDetail,
+    },
+    {
+        path: ROUTE_PATH.MUSIC_VIDEO,
+        component: MusicVideo,
     },
     {
         path: ROUTE_PATH.TOP_LIST,

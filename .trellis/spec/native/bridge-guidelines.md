@@ -34,7 +34,7 @@
 
 Use this contract when changing the Android FTP backup bridge, its typed
 wrapper, or the `src/core/ftpBackup.ts` orchestration boundary. The bridge is
-Android-only and the project minimum remains API 24.
+Android-only and the project minimum is API 26.
 
 ### 2. Signatures
 
@@ -202,4 +202,79 @@ activeSocket?.close()
 // Correct: cancellation owns and closes both socket boundaries.
 activeClient?.close()
 activeSocket?.close()
+```
+
+## Scenario: Native MPV Music Video View
+
+### 1. Scope / Trigger
+
+Use this contract when changing `musicVideo/MpvVideoView`, its view manager,
+the `src/native/mpvVideo` wrapper, or the shared MV player event contract. The
+view is Android-only and depends on `dev.jdtech.mpv:libmpv:0.5.1`.
+
+### 2. Signatures
+
+- Native view name: `MpvVideoView`.
+- Props: `source: { uri, headers? }` and `paused: boolean`.
+- Command: `seekTo(positionSeconds)`.
+- Direct events: `onLoad({ duration })`,
+  `onProgress({ currentTime, duration })`, `onEnd({})`, and
+  `onError({ code })`.
+- `isMpvVideoSupported()` requires Android, API 26+, and a registered view
+  manager.
+
+### 3. Contracts
+
+- Accept only HTTP(S) sources. Apply request headers before `loadfile` and
+  clear `http-header-fields` during release so credentials cannot leak into a
+  later session.
+- Only one MPV view may be active. Creating a new view releases the prior one.
+- Lifecycle order is create/options/init/observe, attach surface, load; cleanup
+  is stop, remove observer, detach surface, clear headers, destroy.
+- Progress events are throttled to 250 ms. Native callbacks post to React only
+  while the view and React instance are active.
+- libmpv 0.5.1 exposes `event(Int)` without an END_FILE reason. Completion is
+  therefore `eof-reached` or position within 1.5 seconds of duration; other
+  END_FILE events are playback failures. Expected END_FILE events caused by
+  source replacement are consumed separately.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required event/result |
+| --- | --- |
+| Non-HTTP(S) or missing URI | Clear the source; do not load |
+| Player creation/init failure | `MPV_INIT_FAILED` |
+| Surface attachment failure | `MPV_SURFACE_FAILED` |
+| `loadfile` failure | `MPV_LOAD_FAILED` |
+| Invalid or failed seek | Ignore invalid input; otherwise `MPV_SEEK_FAILED` |
+| Natural EOF or near-duration END_FILE | `onEnd` |
+| Early END_FILE without EOF evidence | `MPV_PLAYBACK_FAILED` |
+| END_FILE from source replacement | Consume it; emit neither end nor error |
+
+### 5. Good / Base / Bad Cases
+
+- Good: switching quality replaces the source, consumes the replacement event,
+  and resumes near the prior position without reporting a false failure.
+- Base: natural EOF emits `onEnd`, and replay mounts/reloads the source.
+- Bad: mapping every END_FILE to success, resolving an unavailable
+  `error-string` property, or destroying libmpv before detaching the surface.
+
+### 6. Tests Required
+
+- Type-check the wrapper event and command shapes and compile Kotlin after any
+  native or registration change.
+- Exercise load, pause, seek, natural EOF, early failure, source replacement,
+  repeated mount/unmount, and header cleanup on an API 26+ device when device
+  verification is in scope.
+- Build the universal release and verify all four ABIs remain packaged.
+
+### 7. Wrong vs Correct
+
+```kotlin
+// Wrong: libmpv 0.5.1 does not provide a reliable END_FILE reason here.
+if (eventId == MPVLib.MPV_EVENT_END_FILE) emitEnd()
+
+// Correct: distinguish natural completion from replacement and early failure.
+val finished = eofReached || (duration > 0.0 && position >= duration - 1.5)
+if (finished) emitEnd() else emitError("MPV_PLAYBACK_FAILED")
 ```

@@ -18,6 +18,7 @@ import `fun`.upup.musicfree.audioClipper.AudioClipperPackage
 import `fun`.upup.musicfree.ftpBackup.FtpBackupPackage
 import `fun`.upup.musicfree.lanBackup.LanBackupPackage
 import `fun`.upup.musicfree.lyricUtil.LyricUtilPackage
+import `fun`.upup.musicfree.musicVideo.MusicVideoPackage
 import `fun`.upup.musicfree.mp3Util.Mp3UtilPackage
 import `fun`.upup.musicfree.utils.UtilsPackage
 
@@ -33,6 +34,7 @@ class MainApplication : Application(), ReactApplication {
               add(AudioClipperPackage())
               add(FtpBackupPackage())
               add(LanBackupPackage())
+              add(MusicVideoPackage())
               add(Mp3UtilPackage())
               add(LyricUtilPackage())
             }

@@ -125,3 +125,91 @@ if (!result.cancelled) {
     await MusicSheet.replaceMusicItems("favorite", result.replacements);
 }
 ```
+
+## Scenario: Cross-Plugin Lyric Search And MV Sessions
+
+### 1. Scope / Trigger
+
+Use this contract when changing lyric candidate search/association, the
+optional plugin MV method, `MusicVideoManager`, or the in-app MV route. These
+flows cross untrusted plugins, audio playback, persisted settings, routing,
+and Android video engines.
+
+### 2. Signatures
+
+- `searchLyricCandidates(query, currentMusic, plugins)` returns ranked
+  `ILyricSearchCandidate[]`.
+- `Plugin.methods.getMusicVideo(musicItem)` returns a normalized
+  `IPlugin.IMusicVideoResult | null`.
+- `MusicVideoManager.prepareSession(musicItem)` returns `ready`, `unsupported`,
+  `unavailable`, or `stale`.
+- The `music-video` route accepts only `{ sessionId: string }`; session lookup
+  is through `MusicVideoManager.getSession(sessionId)`.
+
+### 3. Contracts
+
+- Lyric search queries all enabled lyric-capable plugins, accepts candidates
+  with non-empty `id`, `platform`, and `title`, deduplicates by
+  `platform@id`, and sorts by relevance, plugin order, then result order.
+- Applying a lyric candidate first obtains non-empty lyric data and rechecks
+  the current-song identity. Failure or a song change must preserve the prior
+  lyric association.
+- The plugin wrapper is the MV trust boundary. It accepts only HTTP(S) URLs,
+  positive heights, bounded strings, and string headers; it deduplicates
+  heights and sorts sources from highest to lowest.
+- MV URLs and headers are session-only and never enter route params, cache, or
+  backup data. Default player and preferred height are the only persisted MV
+  values.
+- `prepareSession` pauses audio only after a valid current-platform MV result.
+  `closeSession` resumes only when audio was previously playing and the same
+  song is still current.
+- Playback failure descends to the next untried lower source. Switching engine
+  is session-only and never changes `mv.defaultPlayer`; the settings page owns
+  that persisted choice.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required result |
+| --- | --- |
+| Plugin lacks `getMusicVideo` | `unsupported`; audio continues |
+| Invalid/empty normalized MV result | `unavailable`; audio continues |
+| Song changes during preparation | `stale`; do not navigate or pause the new song |
+| Candidate lyric fetch fails or is empty | Keep existing lyric/association |
+| Selected MV source fails | Try the next lower untried source |
+| All sources fail | Pause video and expose retry/other-engine actions |
+| MPV selected but unsupported | Use ExoPlayer without rewriting the setting |
+| App backgrounds | Pause video; do not auto-resume on foreground |
+
+### 5. Good / Base / Bad Cases
+
+- Good: a candidate from another enabled source is ranked in one list, fetched,
+  validated, then associated while the original song is still current.
+- Good: exiting an MV restores the exact prior song only when it was playing.
+- Base: a platform with no MV returns `null` and leaves audio untouched.
+- Bad: associating lyrics before fetching them, passing signed video URLs in
+  navigation state, or cross-platform guessing an MV by title.
+
+### 6. Tests Required
+
+- Lyric tests cover malformed candidates, deduplication, relevance ordering,
+  stable ties, failed lyric fetch, and stale current-song protection.
+- MV contract tests cover URL/header validation, height deduplication/sorting,
+  and plugin exceptions.
+- Manager tests cover unsupported/unavailable/stale results, preferred source,
+  downgrade, session-only engine switching, and conditional audio restore.
+- Run TypeScript, full Jest, read-only ESLint, Android Kotlin compilation, and
+  release packaging; exercise both engines on Android when device validation
+  is in scope.
+
+### 7. Wrong vs Correct
+
+```ts
+// Wrong: untrusted URL and credentials leak into navigation state.
+navigate("music-video", { source: pluginResult.sources[0] });
+
+// Correct: normalize once, retain the source in a short-lived manager session.
+const prepared = await musicVideoManager.prepareSession(currentMusic);
+if (prepared.status === "ready") {
+    navigate("music-video", { sessionId: prepared.session.id });
+}
+```

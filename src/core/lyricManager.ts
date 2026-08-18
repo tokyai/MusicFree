@@ -167,7 +167,10 @@ class LyricManager implements IInjectable {
             patchMediaExtra(musicItem, {
                 associatedLrc: undefined,
             });
-            return false;
+            if (this.trackPlayer.isCurrentMusic(musicItem)) {
+                this.refreshLyric(false);
+            }
+            return true;
         } else {
             patchMediaExtra(musicItem, {
                 associatedLrc: linkToMusicItem,

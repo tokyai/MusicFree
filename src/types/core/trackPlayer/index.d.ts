@@ -150,6 +150,9 @@ export interface ITrackPlayer extends IInjectable, EventEmitter<{
      */
     pause(): Promise<void>;
 
+    /** 当前底层播放器是否正在播放 */
+    isPlaying(): Promise<boolean>;
+
     /**
      * 切换到下一个播放模式（列表循环->随机播放->单曲循环）
      */

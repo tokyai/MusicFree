@@ -31,6 +31,7 @@ import Network from "../../utils/network";
 import MediaCache from "../mediaCache";
 import _internalPluginMeta from "./meta";
 import { IPluginManager } from "@/types/core/pluginManager";
+import { normalizeMusicVideoResult } from "./musicVideoContract";
 
 
 axios.defaults.timeout = 2000;
@@ -337,6 +338,25 @@ class PluginMethodsWrapper implements IPlugin.IPluginInstanceMethods {
             );
         } catch (e: any) {
             devLog("error", "获取音乐详情失败", e, e?.message);
+            return null;
+        }
+    }
+
+    /** 获取当前平台的 MV 播放源 */
+    async getMusicVideo(
+        musicItem: IMusic.IMusicItemBase,
+    ): Promise<IPlugin.IMusicVideoResult | null> {
+        await this.ensurePluginIsMounted();
+        if (!this.plugin.instance.getMusicVideo) {
+            return null;
+        }
+        try {
+            const result = await this.plugin.instance.getMusicVideo(
+                resetMediaItem(musicItem, undefined, true),
+            );
+            return normalizeMusicVideoResult(result);
+        } catch (e: any) {
+            errorLog("获取 MV 失败", e?.message);
             return null;
         }
     }
